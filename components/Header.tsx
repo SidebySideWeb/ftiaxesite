@@ -22,8 +22,29 @@ export default function Header({ data }: HeaderProps) {
   }, [])
 
   const scrollToSection = (id: string) => {
-    const element = document.getElementById(id)
-    if (element) element.scrollIntoView({ behavior: "smooth" })
+    // Remove leading # if present
+    const cleanId = id.startsWith('#') ? id.slice(1) : id
+    
+    // Check if it's an anchor link (doesn't start with /)
+    if (!cleanId.startsWith('/')) {
+      const element = document.getElementById(cleanId)
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" })
+        return
+      }
+    }
+    
+    // If not an anchor link, navigate to the URL
+    // For same-page links, try anchor first, then navigate
+    if (cleanId.startsWith('/')) {
+      window.location.href = cleanId
+    } else {
+      // Try as anchor link one more time
+      const element = document.getElementById(cleanId)
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" })
+      }
+    }
   }
 
   return (

@@ -22,7 +22,7 @@ export default function Hero({ data }: HeroProps) {
   const { headline, subheadline, cta, image, stats = [] } = data
 
   return (
-    <section className="bg-gradient-to-br from-white via-teal/5 to-white py-16 md:py-24 lg:py-32">
+    <section id="hero" className="bg-gradient-to-br from-white via-teal/5 to-white py-16 md:py-24 lg:py-32">
       <div className="container mx-auto px-4 md:px-6">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-center">
           {/* Left Content */}
