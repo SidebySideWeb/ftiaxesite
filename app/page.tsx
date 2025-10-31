@@ -1,5 +1,5 @@
 import { headers } from "next/headers"
-import { createClientWithTenant } from "@/lib/payload-client"
+import { createClientWithTenant, getAbsoluteMediaUrl } from "@/lib/payload-client"
 import Hero from "@/components/Hero"
 import Features from "@/components/Features"
 import Process from "@/components/Process"
@@ -154,11 +154,11 @@ export default async function Page() {
               cta: homePage.sections.hero?.cta || defaultData.hero.cta,
               image: homePage.sections.hero?.image 
                 ? (typeof homePage.sections.hero.image === 'object' 
-                    ? homePage.sections.hero.image.url 
-                    : homePage.sections.hero.image)
+                    ? getAbsoluteMediaUrl(homePage.sections.hero.image.url)
+                    : getAbsoluteMediaUrl(homePage.sections.hero.image))
                 : (typeof homePage.featuredImage === 'object' 
-                    ? homePage.featuredImage.url 
-                    : homePage.featuredImage || defaultData.hero.image),
+                    ? getAbsoluteMediaUrl(homePage.featuredImage.url)
+                    : getAbsoluteMediaUrl(homePage.featuredImage) || defaultData.hero.image),
               stats: homePage.sections.hero?.stats || defaultData.hero.stats,
             },
             features: homePage.sections.features || defaultData.features,
@@ -175,8 +175,8 @@ export default async function Page() {
               subheadline: homePage.description || defaultData.hero.subheadline,
               cta: defaultData.hero.cta,
               image: typeof homePage.featuredImage === 'object' 
-                ? homePage.featuredImage.url 
-                : homePage.featuredImage || defaultData.hero.image,
+                ? getAbsoluteMediaUrl(homePage.featuredImage.url)
+                : getAbsoluteMediaUrl(homePage.featuredImage) || defaultData.hero.image,
               stats: defaultData.hero.stats,
             },
           }

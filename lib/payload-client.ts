@@ -259,6 +259,33 @@ export function getBaseUrl(): string {
 }
 
 /**
+ * Helper function to convert relative media URLs to absolute URLs
+ * If the URL is already absolute, returns it as-is
+ * If the URL is relative (starts with /), prepends the CMS base URL
+ */
+export function getAbsoluteMediaUrl(url: string | undefined | null): string {
+  if (!url) return ''
+  
+  // If already absolute URL (starts with http:// or https://), return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  
+  // If relative URL (starts with /), prepend CMS base URL
+  if (url.startsWith('/')) {
+    const baseUrl = getBaseUrl()
+    if (!baseUrl) {
+      console.warn('NEXT_PUBLIC_PAYLOAD_URL not set, cannot convert relative media URL:', url)
+      return url
+    }
+    return `${baseUrl}${url}`
+  }
+  
+  // If no protocol and no leading slash, assume it's a relative path
+  return url
+}
+
+/**
  * Helper function to detect tenant from hostname (for domain-based routing)
  */
 export function getTenantFromHostname(hostname: string): string | null {
