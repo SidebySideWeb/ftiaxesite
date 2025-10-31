@@ -38,7 +38,7 @@ export default function Hero({ data }: HeroProps) {
             </h1>
 
             <div 
-              className="text-lg md:text-xl text-gray-600 leading-relaxed text-pretty"
+              className="rich-text text-lg md:text-xl text-gray-600 leading-relaxed text-pretty"
               dangerouslySetInnerHTML={{ __html: richTextToHTML(subheadline) }}
             />
 

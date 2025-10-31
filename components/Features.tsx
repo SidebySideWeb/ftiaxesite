@@ -41,7 +41,7 @@ export default function Features({ data }: FeaturesProps) {
             {title}
           </h2>
           <div 
-            className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed"
+            className="rich-text text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed"
             dangerouslySetInnerHTML={{ __html: richTextToHTML(subtitle) }}
           />
         </div>
@@ -68,7 +68,7 @@ export default function Features({ data }: FeaturesProps) {
 
                 {/* Description */}
                 <div 
-                  className="text-sm text-gray-600 leading-relaxed"
+                  className="rich-text text-sm text-gray-600 leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: richTextToHTML(feature.description) }}
                 />
               </div>

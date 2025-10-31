@@ -52,7 +52,7 @@ export default function Process({ data }: ProcessProps) {
             {title}
           </h2>
           <div 
-            className="text-lg text-gray-600 max-w-2xl mx-auto"
+            className="rich-text text-lg text-gray-600 max-w-2xl mx-auto"
             dangerouslySetInnerHTML={{ __html: richTextToHTML(subtitle) }}
           />
         </div>
@@ -87,7 +87,7 @@ export default function Process({ data }: ProcessProps) {
                       {step.title}
                     </h3>
                     <div 
-                      className="text-gray-700 leading-relaxed"
+                      className="rich-text text-gray-700 leading-relaxed"
                       dangerouslySetInnerHTML={{ __html: richTextToHTML(step.description) }}
                     />
                   </div>

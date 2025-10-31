@@ -189,7 +189,7 @@ export default function ContactForm({ data }: ContactFormProps) {
             {title}
           </h2>
           <div 
-            className="text-lg text-gray-600"
+            className="rich-text text-lg text-gray-600"
             dangerouslySetInnerHTML={{ __html: richTextToHTML(subtitle) }}
           />
         </div>

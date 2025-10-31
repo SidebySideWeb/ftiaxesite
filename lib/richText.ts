@@ -61,7 +61,7 @@ export function richTextToHTML(content: any): string {
 }
 
 /**
- * Converts Lexical node to HTML string
+ * Converts Lexical node to HTML string with proper formatting
  */
 function lexicalToHTML(node: any): string {
   if (!node) return ''
@@ -69,49 +69,100 @@ function lexicalToHTML(node: any): string {
   let html = ''
   
   // Handle text nodes
-  if (node.text) {
-    let text = node.text
+  if (node.text !== undefined) {
+    let text = escapeHTML(node.text)
     
-    // Apply formatting
+    // Apply text formatting (Lexical uses bitwise flags)
     if (node.format) {
       if (node.format & 1) text = `<strong>${text}</strong>` // bold
       if (node.format & 2) text = `<em>${text}</em>` // italic
+      if (node.format & 8) text = `<s>${text}</s>` // strikethrough
       if (node.format & 4) text = `<u>${text}</u>` // underline
-      if (node.format & 8) text = `<code>${text}</code>` // code
+      if (node.format & 16) text = `<code class="inline-code">${text}</code>` // code
+      if (node.format & 32) text = `<sub>${text}</sub>` // subscript
+      if (node.format & 64) text = `<sup>${text}</sup>` // superscript
     }
     
-    html += text
+    return text
   }
   
-  // Handle block elements
-  if (node.type === 'paragraph') {
-    const childrenHTML = node.children
-      ? node.children.map((child: any) => lexicalToHTML(child)).join('')
-      : ''
-    html = `<p>${childrenHTML}</p>`
-  } else if (node.type === 'heading') {
-    const level = node.tag || 'h1'
-    const childrenHTML = node.children
-      ? node.children.map((child: any) => lexicalToHTML(child)).join('')
-      : ''
-    html = `<${level}>${childrenHTML}</${level}>`
-  } else if (node.type === 'link') {
-    const url = node.fields?.url || '#'
-    const childrenHTML = node.children
-      ? node.children.map((child: any) => lexicalToHTML(child)).join('')
-      : ''
-    html = `<a href="${url}">${childrenHTML}</a>`
-  } else if (node.type === 'list') {
-    const listTag = node.listType === 'number' ? 'ol' : 'ul'
-    const childrenHTML = node.children
-      ? node.children.map((child: any) => `<li>${lexicalToHTML(child)}</li>`).join('')
-      : ''
-    html = `<${listTag}>${childrenHTML}</${listTag}>`
-  } else if (node.children && Array.isArray(node.children)) {
-    // Generic container - process children
-    html = node.children.map((child: any) => lexicalToHTML(child)).join('')
+  // Handle block and inline elements by type
+  switch (node.type) {
+    case 'root':
+      // Root node - just process children
+      return node.children
+        ? node.children.map((child: any) => lexicalToHTML(child)).join('')
+        : ''
+    
+    case 'paragraph':
+      const pChildren = node.children
+        ? node.children.map((child: any) => lexicalToHTML(child)).join('')
+        : ''
+      return `<p>${pChildren || '<br>'}</p>`
+    
+    case 'heading':
+      const level = node.tag || 'h2'
+      const hChildren = node.children
+        ? node.children.map((child: any) => lexicalToHTML(child)).join('')
+        : ''
+      return `<${level}>${hChildren}</${level}>`
+    
+    case 'list':
+      const listTag = node.listType === 'number' ? 'ol' : 'ul'
+      const listChildren = node.children
+        ? node.children.map((child: any) => lexicalToHTML(child)).join('')
+        : ''
+      return `<${listTag}>${listChildren}</${listTag}>`
+    
+    case 'listitem':
+      const liChildren = node.children
+        ? node.children.map((child: any) => lexicalToHTML(child)).join('')
+        : ''
+      return `<li>${liChildren}</li>`
+    
+    case 'link':
+      const url = node.fields?.url || node.url || '#'
+      const linkChildren = node.children
+        ? node.children.map((child: any) => lexicalToHTML(child)).join('')
+        : ''
+      const target = node.fields?.newTab ? ' target="_blank" rel="noopener noreferrer"' : ''
+      return `<a href="${escapeHTML(url)}"${target}>${linkChildren}</a>`
+    
+    case 'quote':
+      const quoteChildren = node.children
+        ? node.children.map((child: any) => lexicalToHTML(child)).join('')
+        : ''
+      return `<blockquote>${quoteChildren}</blockquote>`
+    
+    case 'code':
+      const codeChildren = node.children
+        ? node.children.map((child: any) => lexicalToHTML(child)).join('')
+        : ''
+      return `<pre><code>${codeChildren}</code></pre>`
+    
+    case 'linebreak':
+      return '<br>'
+    
+    default:
+      // Generic container - process children if they exist
+      if (node.children && Array.isArray(node.children)) {
+        return node.children.map((child: any) => lexicalToHTML(child)).join('')
+      }
+      return ''
   }
-  
-  return html
+}
+
+/**
+ * Escapes HTML special characters to prevent XSS
+ */
+function escapeHTML(text: string): string {
+  const map: { [key: string]: string } = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  }
+  return text.replace(/[&<>"']/g, (m) => map[m])
 }
 
