@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Mic, Send, MicOff } from "lucide-react"
+import { richTextToHTML } from "@/lib/richText"
 
 type ContactFormProps = {
   data: {
     title: string
-    subtitle: string
+    subtitle: string | any // Can be string or richText
     form: {
       name: string
       email: string
@@ -163,7 +164,10 @@ export default function ContactForm({ data }: ContactFormProps) {
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-brand-navy">
             {title}
           </h2>
-          <p className="text-lg text-gray-600">{subtitle}</p>
+          <div 
+            className="text-lg text-gray-600"
+            dangerouslySetInnerHTML={{ __html: richTextToHTML(subtitle) }}
+          />
         </div>
 
         {/* Form */}

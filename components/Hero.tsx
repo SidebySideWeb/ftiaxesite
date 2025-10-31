@@ -2,11 +2,12 @@
 
 import { Button } from "@/components/ui/button"
 import { Sparkles } from "lucide-react"
+import { richTextToHTML } from "@/lib/richText"
 
 type HeroProps = {
   data: {
     headline: string
-    subheadline: string
+    subheadline: string | any // Can be string or richText
     cta: string
     image?: string
     stats?: { label: string; value: string }[]
@@ -36,9 +37,10 @@ export default function Hero({ data }: HeroProps) {
               {headline}
             </h1>
 
-            <p className="text-lg md:text-xl text-gray-600 leading-relaxed text-pretty">
-              {subheadline}
-            </p>
+            <div 
+              className="text-lg md:text-xl text-gray-600 leading-relaxed text-pretty"
+              dangerouslySetInnerHTML={{ __html: richTextToHTML(subheadline) }}
+            />
 
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <Button

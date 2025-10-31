@@ -1,13 +1,14 @@
 import { Clock, Euro, TrendingUp, Shield, Smartphone, Zap } from "lucide-react"
+import { richTextToHTML } from "@/lib/richText"
 
 type FeaturesProps = {
   data: {
     title: string
-    subtitle: string
+    subtitle: string | any // Can be string or richText
     items: {
       icon: string // we'll map this string to an icon below
       title: string
-      description: string
+      description: string | any // Can be string or richText
     }[]
   }
 }
@@ -39,9 +40,10 @@ export default function Features({ data }: FeaturesProps) {
           <h2 className="text-3xl sm:text-4xl font-bold text-brand-navy mb-4">
             {title}
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            {subtitle}
-          </p>
+          <div 
+            className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: richTextToHTML(subtitle) }}
+          />
         </div>
 
         {/* Features Grid */}
@@ -65,9 +67,10 @@ export default function Features({ data }: FeaturesProps) {
                 </h3>
 
                 {/* Description */}
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  {feature.description}
-                </p>
+                <div 
+                  className="text-sm text-gray-600 leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: richTextToHTML(feature.description) }}
+                />
               </div>
             )
           })}
