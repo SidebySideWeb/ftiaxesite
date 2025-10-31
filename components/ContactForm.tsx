@@ -44,13 +44,16 @@ export default function ContactForm({ data }: ContactFormProps) {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
+    const form = e.currentTarget
+    const formData = new FormData(form)
+
     try {
-      const response = await fetch("https://formspree.io/f/movkkzry", {
-        method: "POST",
+      const response = await fetch(form.action, {
+        method: form.method,
+        body: formData,
         headers: {
-          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body: JSON.stringify(formData),
       })
 
       if (response.ok) {
@@ -61,8 +64,14 @@ export default function ContactForm({ data }: ContactFormProps) {
           phone: "",
           brief: "",
         })
+        form.reset()
       } else {
-        alert("⚠️ Υπήρξε σφάλμα στην αποστολή. Προσπάθησε ξανά.")
+        const data = await response.json()
+        if (data.errors) {
+          alert(`⚠️ Σφάλμα: ${data.errors.map((err: any) => err.message).join(", ")}`)
+        } else {
+          alert("⚠️ Υπήρξε σφάλμα στην αποστολή. Προσπάθησε ξανά.")
+        }
       }
     } catch (error) {
       console.error("Form submission error:", error)
@@ -103,6 +112,7 @@ export default function ContactForm({ data }: ContactFormProps) {
     recognition.interimResults = true;
 
     let finalTranscript = "";
+    let lastProcessedIndex = -1; // Track what we've already processed
 
     recognition.onstart = () => {
       setIsListening(true);
@@ -110,17 +120,38 @@ export default function ContactForm({ data }: ContactFormProps) {
 
     recognition.onresult = (event: any) => {
       let interimTranscript = "";
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
+      
+      // Process only new results (after lastProcessedIndex)
+      for (let i = Math.max(event.resultIndex, lastProcessedIndex + 1); i < event.results.length; ++i) {
         const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += transcript;
+          finalTranscript += transcript + " ";
+          // Add final transcript
+          setFormData((prev) => ({
+            ...prev,
+            brief: prev.brief ? `${prev.brief.trim()} ${transcript.trim()}` : transcript.trim(),
+          }));
+          lastProcessedIndex = i;
         } else {
           interimTranscript += transcript;
         }
       }
-      const combined = finalTranscript || interimTranscript;
-      if (combined.trim()) {
-        setFormData((prev) => ({ ...prev, brief: combined.trim() }));
+      
+      // Show interim results for real-time feedback (only the latest interim)
+      if (interimTranscript.trim()) {
+        setFormData((prev) => {
+          // Remove any previous interim results and add new one
+          // This gives real-time feedback without saving duplicates
+          const currentBrief = prev.brief || "";
+          // Only show interim if we don't have final results yet
+          if (!finalTranscript.trim()) {
+            return {
+              ...prev,
+              brief: interimTranscript.trim(),
+            };
+          }
+          return prev;
+        });
       }
     };
 
@@ -134,15 +165,8 @@ export default function ContactForm({ data }: ContactFormProps) {
     };
 
     recognition.onend = () => {
-      if (finalTranscript.trim()) {
-        setFormData((prev) => ({
-          ...prev,
-          brief: prev.brief
-            ? `${prev.brief.trim()} ${finalTranscript.trim()}`
-            : finalTranscript.trim(),
-        }));
-      }
       setIsListening(false);
+      setRecognitionInstance(null);
     };
 
     recognition.start();
@@ -171,7 +195,12 @@ export default function ContactForm({ data }: ContactFormProps) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+        <form 
+          action="https://formspree.io/f/movkkzry"
+          method="POST"
+          onSubmit={handleSubmit} 
+          className="bg-white rounded-2xl shadow-lg p-8 space-y-6"
+        >
           {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="name" className="text-base font-medium text-brand-navy">
@@ -179,6 +208,7 @@ export default function ContactForm({ data }: ContactFormProps) {
             </Label>
             <Input
               id="name"
+              name="name"
               type="text"
               required
               value={formData.name}
@@ -195,6 +225,7 @@ export default function ContactForm({ data }: ContactFormProps) {
             </Label>
             <Input
               id="email"
+              name="email"
               type="email"
               required
               value={formData.email}
@@ -211,6 +242,7 @@ export default function ContactForm({ data }: ContactFormProps) {
             </Label>
             <Input
               id="phone"
+              name="phone"
               type="tel"
               required
               value={formData.phone}
@@ -278,6 +310,15 @@ export default function ContactForm({ data }: ContactFormProps) {
                 </button>
               </div>
             )}
+            
+            {/* Hidden textarea for Formspree to capture brief/description */}
+            <textarea
+              name="brief"
+              value={formData.brief}
+              readOnly
+              className="hidden"
+              aria-hidden="true"
+            />
           </div>
 
           {/* Submit */}
