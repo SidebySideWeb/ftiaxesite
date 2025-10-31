@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
   },
   // Production optimizations
   reactStrictMode: true,
-  swcMinify: true,
+  // swcMinify is enabled by default in Next.js 16+
 };
 
 export default nextConfig;

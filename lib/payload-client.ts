@@ -17,6 +17,22 @@ export interface FetchOptions extends RequestInit {
 }
 
 /**
+ * Payload API response structure
+ */
+export interface PayloadResponse<T = any> {
+  docs: T[]
+  totalDocs?: number
+  limit?: number
+  totalPages?: number
+  page?: number
+  pagingCounter?: number
+  hasPrevPage?: boolean
+  hasNextPage?: boolean
+  prevPage?: number | null
+  nextPage?: number | null
+}
+
+/**
  * Creates an API client instance for fetching content
  */
 export class PayloadApiClient {
@@ -94,8 +110,8 @@ export class PayloadApiClient {
   /**
    * Fetches a single page by slug
    */
-  async getPage(slug: string, options: FetchOptions = {}) {
-    return this.request(
+  async getPage<T = any>(slug: string, options: FetchOptions = {}): Promise<PayloadResponse<T>> {
+    return this.request<PayloadResponse<T>>(
       '/pages',
       {
         ...options,
@@ -120,8 +136,8 @@ export class PayloadApiClient {
   /**
    * Fetches all pages for the tenant
    */
-  async getPages(options: FetchOptions = {}) {
-    return this.request(
+  async getPages<T = any>(options: FetchOptions = {}): Promise<PayloadResponse<T>> {
+    return this.request<PayloadResponse<T>>(
       '/pages',
       {
         ...options,
