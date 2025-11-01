@@ -9,6 +9,7 @@ export interface ApiClientOptions {
   baseUrl: string
   tenantSlug?: string
   tenantDomain?: string
+  locale?: string
   headers?: HeadersInit
 }
 
@@ -39,12 +40,14 @@ export class PayloadApiClient {
   private baseUrl: string
   private tenantSlug?: string
   private tenantDomain?: string
+  private locale?: string
   private defaultHeaders: HeadersInit
 
   constructor(options: ApiClientOptions) {
     this.baseUrl = options.baseUrl.replace(/\/$/, '') // Remove trailing slash
     this.tenantSlug = options.tenantSlug
     this.tenantDomain = options.tenantDomain
+    this.locale = options.locale
     this.defaultHeaders = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -56,6 +59,11 @@ export class PayloadApiClient {
    */
   private buildUrl(endpoint: string, params?: Record<string, string | number | boolean>): string {
     const url = new URL(`${this.baseUrl}/api${endpoint}`)
+    
+    // Add locale parameter if set
+    if (this.locale) {
+      url.searchParams.append('locale', this.locale)
+    }
     
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -298,13 +306,14 @@ export function getTenantFromHostname(hostname: string): string | null {
  * Helper function to create a client with automatic tenant detection
  * Use this in Next.js server components or API routes
  */
-export function createClientWithTenant(hostname?: string): PayloadApiClient {
+export function createClientWithTenant(hostname?: string, locale?: string): PayloadApiClient {
   const baseUrl = getBaseUrl()
   const tenantDomain = hostname ? getTenantFromHostname(hostname) : undefined
 
   return createPayloadClient({
     baseUrl,
     tenantDomain: tenantDomain || undefined,
+    locale,
   })
 }
 
