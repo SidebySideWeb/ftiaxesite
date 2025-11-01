@@ -40,7 +40,7 @@ export default function ContactForm({ data }: ContactFormProps) {
     setIsMobile(/android|iphone|ipad|ipod/i.test(ua));
   }, []);
 
-  // ✅ Handle form submission (Formspree)
+  // ✅ Handle form submission (HubSpot)
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
@@ -49,32 +49,21 @@ export default function ContactForm({ data }: ContactFormProps) {
 
     try {
       const response = await fetch(form.action, {
-        method: form.method,
+        method: 'POST',
         body: formData,
-        headers: {
-          Accept: "application/json",
-        },
-        // Add mode to handle CORS properly
-        mode: 'cors',
+        mode: 'no-cors', // HubSpot forms don't support CORS
       })
 
-      if (response.ok) {
-        alert("✅ Το μήνυμά σου στάλθηκε με επιτυχία!")
-        setFormData({
-          name: "",
-          email: "",
-          phone: "",
-          brief: "",
-        })
-        form.reset()
-      } else {
-        const data = await response.json().catch(() => ({ errors: [] }))
-        if (data.errors && data.errors.length > 0) {
-          alert(`⚠️ Σφάλμα: ${data.errors.map((err: any) => err.message).join(", ")}`)
-        } else {
-          alert("⚠️ Υπήρξε σφάλμα στην αποστολή. Προσπάθησε ξανά.")
-        }
-      }
+      // With no-cors mode, we can't read the response
+      // HubSpot will handle the submission
+      alert("✅ Το μήνυμά σου στάλθηκε με επιτυχία!")
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        brief: "",
+      })
+      form.reset()
     } catch (error) {
       console.error("Form submission error:", error)
       alert("⚠️ Σφάλμα σύνδεσης. Έλεγξε τη σύνδεσή σου στο internet.")
@@ -198,7 +187,7 @@ export default function ContactForm({ data }: ContactFormProps) {
 
         {/* Form */}
         <form 
-          action="https://formspree.io/f/movkkzry"
+          action="https://forms.hubspot.com/uploads/form/v2/147183297/91e2db11-ef0e-4f41-9dba-50eb86c31f21"
           method="POST"
           onSubmit={handleSubmit} 
           className="bg-white rounded-2xl shadow-lg p-8 space-y-6"
@@ -313,7 +302,7 @@ export default function ContactForm({ data }: ContactFormProps) {
               </div>
             )}
             
-            {/* Hidden textarea for Formspree to capture brief/description */}
+            {/* Hidden textarea for form to capture brief/description */}
             <textarea
               name="brief"
               value={formData.brief}
