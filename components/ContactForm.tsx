@@ -54,6 +54,8 @@ export default function ContactForm({ data }: ContactFormProps) {
         headers: {
           Accept: "application/json",
         },
+        // Add mode to handle CORS properly
+        mode: 'cors',
       })
 
       if (response.ok) {
@@ -66,8 +68,8 @@ export default function ContactForm({ data }: ContactFormProps) {
         })
         form.reset()
       } else {
-        const data = await response.json()
-        if (data.errors) {
+        const data = await response.json().catch(() => ({ errors: [] }))
+        if (data.errors && data.errors.length > 0) {
           alert(`⚠️ Σφάλμα: ${data.errors.map((err: any) => err.message).join(", ")}`)
         } else {
           alert("⚠️ Υπήρξε σφάλμα στην αποστολή. Προσπάθησε ξανά.")

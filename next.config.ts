@@ -24,6 +24,11 @@ const nextConfig: NextConfig = {
   // Production optimizations
   reactStrictMode: true,
   // swcMinify is enabled by default in Next.js 16+
+  
+  // Experimental: Optimize CSS loading to reduce preload warnings
+  experimental: {
+    optimizeCss: true, // This can help reduce CSS preload warnings
+  },
 };
 
 export default nextConfig;
