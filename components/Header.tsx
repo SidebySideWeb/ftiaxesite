@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { LanguageSwitcher } from "./LanguageSwitcher"
 
 type HeaderProps = {
   data: {
@@ -78,9 +77,8 @@ export default function Header({ data }: HeaderProps) {
               ))}
             </div>
 
-            {/* Language Switcher and CTA */}
-            <div className="hidden md:flex items-center gap-4">
-              <LanguageSwitcher />
+            {/* CTA */}
+            <div className="hidden md:flex items-center">
               <Button
                 onClick={() => scrollToSection(data.cta.link)}
                 className="bg-brand-teal hover:bg-brand-teal/90 text-white font-semibold"
