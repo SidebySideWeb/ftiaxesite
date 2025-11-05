@@ -128,167 +128,49 @@ const defaultData = {
 }
 
 export default async function Page() {
-  // LOG AT THE VERY TOP - This should always execute
-  console.log('🚨🚨🚨 [Page] FUNCTION CALLED - This proves the page component is being executed!')
-  
   const headersList = await headers()
   const hostname = headersList.get('host') || ''
-  
-  console.log('🚨🚨🚨 [Page] Hostname:', hostname)
 
   // Try to fetch from Payload CMS, fallback to default data
   let pageData = defaultData
-  let cmsDataReceived = false
 
   try {
     if (process.env.NEXT_PUBLIC_PAYLOAD_URL) {
       const client = createClientWithTenant(hostname)
-      
-      // Fetch home page from CMS
-      console.log('🔵 [Home Page] Fetching from CMS...', {
-        hostname,
-        payloadUrl: process.env.NEXT_PUBLIC_PAYLOAD_URL,
-      })
-      
       const homePageResult = await client.getPage('home')
-      console.log('🔵 [Home Page] API Response:', {
-        totalDocs: homePageResult.docs?.length || 0,
-        hasDocs: !!homePageResult.docs,
-        fullResponse: JSON.stringify(homePageResult).substring(0, 500),
-      })
-      
       const homePage = homePageResult.docs?.[0]
 
-      if (homePage) {
-        cmsDataReceived = true
-        console.log('🔵 [Home Page] CMS Page Found!', {
-          id: homePage.id,
-          slug: homePage.slug,
-          title: homePage.title,
-          hasSections: !!homePage.sections,
-          sectionsKeys: homePage.sections ? Object.keys(homePage.sections) : [],
-        })
-
-        // Map CMS page data to component props - SIMPLIFIED: always use sections if they exist
-        if (homePage.sections) {
-          console.log('🔵 [Home Page] Using sections data')
-          console.log('🔵 [Home Page] Raw sections:', {
-            hasHero: !!homePage.sections.hero,
-            hasFeatures: !!homePage.sections.features,
-            hasProcess: !!homePage.sections.process,
-            hasContact: !!homePage.sections.contact,
-            heroKeys: homePage.sections.hero ? Object.keys(homePage.sections.hero) : [],
-            featuresKeys: homePage.sections.features ? Object.keys(homePage.sections.features) : [],
-            processKeys: homePage.sections.process ? Object.keys(homePage.sections.process) : [],
-            contactKeys: homePage.sections.contact ? Object.keys(homePage.sections.contact) : [],
-          })
-          
-          pageData = {
-            header: homePage.sections.header || defaultData.header,
-            hero: homePage.sections.hero ? {
-              headline: homePage.sections.hero.headline || homePage.title || defaultData.hero.headline,
-              subheadline: homePage.sections.hero.subheadline || homePage.description || defaultData.hero.subheadline,
-              cta: homePage.sections.hero.cta || defaultData.hero.cta,
-              image: homePage.sections.hero.image 
-                ? (typeof homePage.sections.hero.image === 'object' 
-                    ? getAbsoluteMediaUrl(homePage.sections.hero.image.url)
-                    : getAbsoluteMediaUrl(homePage.sections.hero.image))
-                : (typeof homePage.featuredImage === 'object' 
-                    ? getAbsoluteMediaUrl(homePage.featuredImage.url)
-                    : getAbsoluteMediaUrl(homePage.featuredImage) || defaultData.hero.image),
-              stats: homePage.sections.hero.stats || defaultData.hero.stats,
-            } : defaultData.hero,
-            features: homePage.sections.features || defaultData.features,
-            process: homePage.sections.process || defaultData.process,
-            contact: homePage.sections.contact || defaultData.contact,
-            footer: homePage.sections.footer || defaultData.footer,
-          }
-          
-          console.log('🔵 [Home Page] After mapping:', {
-            heroHeadline: pageData.hero?.headline,
-            featuresTitle: pageData.features?.title,
-            featuresItemsCount: pageData.features?.items?.length,
-            processTitle: pageData.process?.title,
-            processStepsCount: pageData.process?.steps?.length,
-          })
-
-          console.log('🔵 [Home Page] Mapped Data:', {
-            hasHero: !!pageData.hero,
-            hasFeatures: !!pageData.features,
-            hasProcess: !!pageData.process,
-            hasContact: !!pageData.contact,
-            heroHeadline: pageData.hero?.headline,
-            featuresTitle: pageData.features?.title,
-            featuresItems: pageData.features?.items?.length,
-            processTitle: pageData.process?.title,
-            processSteps: pageData.process?.steps?.length,
-          })
-        } else {
-          console.log('🔵 [Home Page] No sections found, using legacy structure')
-          // Fallback for pages without sections (legacy structure)
-          pageData = {
-            ...defaultData,
-            hero: {
-              headline: homePage.title || defaultData.hero.headline,
-              subheadline: homePage.description || defaultData.hero.subheadline,
-              cta: defaultData.hero.cta,
-              image: typeof homePage.featuredImage === 'object' 
-                ? getAbsoluteMediaUrl(homePage.featuredImage.url)
-                : getAbsoluteMediaUrl(homePage.featuredImage) || defaultData.hero.image,
-              stats: defaultData.hero.stats,
-            },
-          }
+      if (homePage && homePage.sections) {
+        // Use sections directly from CMS
+        pageData = {
+          header: homePage.sections.header || defaultData.header,
+          hero: {
+            headline: homePage.sections.hero?.headline || homePage.title || defaultData.hero.headline,
+            subheadline: homePage.sections.hero?.subheadline || homePage.description || defaultData.hero.subheadline,
+            cta: homePage.sections.hero?.cta || defaultData.hero.cta,
+            image: homePage.sections.hero?.image 
+              ? (typeof homePage.sections.hero.image === 'object' 
+                  ? getAbsoluteMediaUrl(homePage.sections.hero.image.url)
+                  : getAbsoluteMediaUrl(homePage.sections.hero.image))
+              : (typeof homePage.featuredImage === 'object' 
+                  ? getAbsoluteMediaUrl(homePage.featuredImage.url)
+                  : getAbsoluteMediaUrl(homePage.featuredImage) || defaultData.hero.image),
+            stats: homePage.sections.hero?.stats || defaultData.hero.stats,
+          },
+          features: homePage.sections.features || defaultData.features,
+          process: homePage.sections.process || defaultData.process,
+          contact: homePage.sections.contact || defaultData.contact,
+          footer: homePage.sections.footer || defaultData.footer,
         }
-      } else {
-        console.log('🔵 [Home Page] No page found in CMS response')
       }
-    } else {
-      console.log('🔵 [Home Page] NEXT_PUBLIC_PAYLOAD_URL not set, using default data')
     }
   } catch (error) {
     // Fallback to default data if CMS fetch fails
-    console.error('🔴 [Home Page] ERROR fetching from CMS:', error)
-    if (error instanceof Error) {
-      console.error('🔴 [Home Page] Error details:', {
-        message: error.message,
-        stack: error.stack,
-        hostname,
-        payloadUrl: process.env.NEXT_PUBLIC_PAYLOAD_URL,
-      })
-    }
+    console.error('[Home Page] Failed to fetch page data from CMS:', error)
   }
 
-  // Final debug: Log what we're rendering
-  console.log('🟢 [Home Page] FINAL - Rendering with:', {
-    cmsDataReceived,
-    hasHero: !!pageData.hero,
-    hasFeatures: !!pageData.features,
-    hasProcess: !!pageData.process,
-    hasContact: !!pageData.contact,
-    heroHeadline: pageData.hero?.headline?.substring(0, 50),
-    featuresTitle: pageData.features?.title?.substring(0, 50),
-    processTitle: pageData.process?.title?.substring(0, 50),
-  })
-
-  console.log('🚨🚨🚨 [Page] About to return JSX')
-  
   return (
     <main>
-      {/* DEBUG: Always visible indicator that page is rendering */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        background: '#ff0000',
-        color: '#fff',
-        padding: '10px',
-        zIndex: 9999,
-        fontSize: '12px',
-        fontFamily: 'monospace',
-      }}>
-        🔵 PAGE RENDERING | CMS: {cmsDataReceived ? '✅' : '❌'} | Hero: {pageData.hero?.headline ? '✅' : '❌'} | Features: {pageData.features?.title ? '✅' : '❌'} | Process: {pageData.process?.title ? '✅' : '❌'}
-      </div>
       <Hero data={pageData.hero} />
       <Features data={pageData.features} />
       <Process data={pageData.process} />

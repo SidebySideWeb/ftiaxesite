@@ -15,24 +15,9 @@ type HeroProps = {
 }
 
 export default function Hero({ data }: HeroProps) {
-  console.log('🟡 [Hero] Component received:', {
-    hasData: !!data,
-    hasHeadline: !!data?.headline,
-    headline: data?.headline?.substring(0, 50),
-    dataKeys: data ? Object.keys(data) : [],
-  })
-  
-  // Guard: If no data, don't render
   if (!data || !data.headline) {
-    console.warn('🔴 [Hero] NOT RENDERING - Missing data:', { 
-      hasData: !!data,
-      hasHeadline: !!data?.headline,
-      data,
-    })
-    return <div style={{background: 'yellow', padding: '20px', margin: '20px'}}>🔴 HERO: Missing headline - Data: {JSON.stringify(data)}</div>
+    return null
   }
-  
-  console.log('🟢 [Hero] RENDERING with data:', { headline: data.headline })
 
   const handleCTAClick = () => {
     const contactForm = document.getElementById("contact")

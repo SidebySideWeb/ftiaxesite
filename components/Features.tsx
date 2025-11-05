@@ -23,26 +23,9 @@ const iconMap: Record<string, any> = {
 }
 
 export default function Features({ data }: FeaturesProps) {
-  console.log('🟡 [Features] Component received:', {
-    hasData: !!data,
-    hasItems: !!data?.items,
-    itemsLength: data?.items?.length,
-    title: data?.title?.substring(0, 50),
-  })
-  
-  // Guard: If no data or no items, don't render
   if (!data || !data.items || !Array.isArray(data.items) || data.items.length === 0) {
-    console.warn('🔴 [Features] NOT RENDERING - Missing data:', { 
-      hasData: !!data,
-      hasItems: !!data?.items,
-      itemsIsArray: Array.isArray(data?.items),
-      itemsLength: data?.items?.length,
-      data,
-    })
-    return <div style={{background: 'yellow', padding: '20px', margin: '20px'}}>🔴 FEATURES: Missing items - Items: {data?.items?.length || 0} - Data: {JSON.stringify(data).substring(0, 200)}</div>
+    return null
   }
-  
-  console.log('🟢 [Features] RENDERING with', data.items.length, 'items')
 
   const { title, subtitle, items } = data
 
