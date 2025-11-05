@@ -133,19 +133,20 @@ export default async function Page() {
 
   // Try to fetch from Payload CMS, fallback to default data
   let pageData = defaultData
+  let cmsDataReceived = false
 
   try {
     if (process.env.NEXT_PUBLIC_PAYLOAD_URL) {
       const client = createClientWithTenant(hostname)
       
       // Fetch home page from CMS
-      console.log('[Home Page] Fetching from CMS...', {
+      console.log('🔵 [Home Page] Fetching from CMS...', {
         hostname,
         payloadUrl: process.env.NEXT_PUBLIC_PAYLOAD_URL,
       })
       
       const homePageResult = await client.getPage('home')
-      console.log('[Home Page] API Response:', {
+      console.log('🔵 [Home Page] API Response:', {
         totalDocs: homePageResult.docs?.length || 0,
         hasDocs: !!homePageResult.docs,
       })
@@ -153,41 +154,22 @@ export default async function Page() {
       const homePage = homePageResult.docs?.[0]
 
       if (homePage) {
-        // Debug: Log what we received from CMS
-        console.log('[Home Page] CMS Data:', {
+        cmsDataReceived = true
+        console.log('🔵 [Home Page] CMS Page Found!', {
+          id: homePage.id,
+          slug: homePage.slug,
+          title: homePage.title,
           hasSections: !!homePage.sections,
           sectionsKeys: homePage.sections ? Object.keys(homePage.sections) : [],
-          hasHero: !!homePage.sections?.hero,
-          heroKeys: homePage.sections?.hero ? Object.keys(homePage.sections.hero) : [],
-          hasFeatures: !!homePage.sections?.features,
-          featuresKeys: homePage.sections?.features ? Object.keys(homePage.sections.features) : [],
-          hasProcess: !!homePage.sections?.process,
-          hasContact: !!homePage.sections?.contact,
-          heroHeadline: homePage.sections?.hero?.headline,
-          featuresTitle: homePage.sections?.features?.title,
-          featuresItemsLength: homePage.sections?.features?.items?.length,
         })
 
-        // Map CMS page data to component props
-        // Use sections if available, otherwise fallback to default
+        // Map CMS page data to component props - SIMPLIFIED: always use sections if they exist
         if (homePage.sections) {
-          // Helper to check if section has required data
-          const hasValidHero = homePage.sections.hero && homePage.sections.hero.headline
-          const hasValidFeatures = homePage.sections.features && 
-            homePage.sections.features.title && 
-            Array.isArray(homePage.sections.features.items) && 
-            homePage.sections.features.items.length > 0
-          const hasValidProcess = homePage.sections.process && 
-            homePage.sections.process.title && 
-            Array.isArray(homePage.sections.process.steps) && 
-            homePage.sections.process.steps.length > 0
-          const hasValidContact = homePage.sections.contact && 
-            homePage.sections.contact.title && 
-            homePage.sections.contact.form
-
+          console.log('🔵 [Home Page] Using sections data')
+          
           pageData = {
             header: homePage.sections.header || defaultData.header,
-            hero: hasValidHero ? {
+            hero: homePage.sections.hero ? {
               headline: homePage.sections.hero.headline || homePage.title || defaultData.hero.headline,
               subheadline: homePage.sections.hero.subheadline || homePage.description || defaultData.hero.subheadline,
               cta: homePage.sections.hero.cta || defaultData.hero.cta,
@@ -200,33 +182,25 @@ export default async function Page() {
                     : getAbsoluteMediaUrl(homePage.featuredImage) || defaultData.hero.image),
               stats: homePage.sections.hero.stats || defaultData.hero.stats,
             } : defaultData.hero,
-            features: hasValidFeatures ? homePage.sections.features : defaultData.features,
-            process: hasValidProcess ? homePage.sections.process : defaultData.process,
-            contact: hasValidContact ? homePage.sections.contact : defaultData.contact,
+            features: homePage.sections.features || defaultData.features,
+            process: homePage.sections.process || defaultData.process,
+            contact: homePage.sections.contact || defaultData.contact,
             footer: homePage.sections.footer || defaultData.footer,
           }
 
-          // Debug: Log what we're passing to components
-          console.log('[Home Page] Mapped Data:', {
+          console.log('🔵 [Home Page] Mapped Data:', {
             hasHero: !!pageData.hero,
             hasFeatures: !!pageData.features,
             hasProcess: !!pageData.process,
             hasContact: !!pageData.contact,
             heroHeadline: pageData.hero?.headline,
-            heroHasHeadline: !!pageData.hero?.headline,
             featuresTitle: pageData.features?.title,
-            featuresItemsLength: pageData.features?.items?.length,
+            featuresItems: pageData.features?.items?.length,
             processTitle: pageData.process?.title,
-            processStepsLength: pageData.process?.steps?.length,
-            contactTitle: pageData.contact?.title,
-            validation: {
-              hasValidHero,
-              hasValidFeatures,
-              hasValidProcess,
-              hasValidContact,
-            },
+            processSteps: pageData.process?.steps?.length,
           })
         } else {
+          console.log('🔵 [Home Page] No sections found, using legacy structure')
           // Fallback for pages without sections (legacy structure)
           pageData = {
             ...defaultData,
@@ -241,13 +215,17 @@ export default async function Page() {
             },
           }
         }
+      } else {
+        console.log('🔵 [Home Page] No page found in CMS response')
       }
+    } else {
+      console.log('🔵 [Home Page] NEXT_PUBLIC_PAYLOAD_URL not set, using default data')
     }
   } catch (error) {
     // Fallback to default data if CMS fetch fails
-    console.error('[Home Page] Failed to fetch page data from CMS:', error)
+    console.error('🔴 [Home Page] ERROR fetching from CMS:', error)
     if (error instanceof Error) {
-      console.error('[Home Page] Error details:', {
+      console.error('🔴 [Home Page] Error details:', {
         message: error.message,
         stack: error.stack,
         hostname,
@@ -257,14 +235,15 @@ export default async function Page() {
   }
 
   // Final debug: Log what we're rendering
-  console.log('[Home Page] Final pageData:', {
+  console.log('🟢 [Home Page] FINAL - Rendering with:', {
+    cmsDataReceived,
     hasHero: !!pageData.hero,
     hasFeatures: !!pageData.features,
     hasProcess: !!pageData.process,
     hasContact: !!pageData.contact,
-    heroHeadline: pageData.hero?.headline,
-    featuresTitle: pageData.features?.title,
-    usingDefaultData: pageData === defaultData,
+    heroHeadline: pageData.hero?.headline?.substring(0, 50),
+    featuresTitle: pageData.features?.title?.substring(0, 50),
+    processTitle: pageData.process?.title?.substring(0, 50),
   })
 
   return (

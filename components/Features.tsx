@@ -23,18 +23,25 @@ const iconMap: Record<string, any> = {
 }
 
 export default function Features({ data }: FeaturesProps) {
+  console.log('🟡 [Features] Component received:', {
+    hasData: !!data,
+    hasItems: !!data?.items,
+    itemsLength: data?.items?.length,
+    title: data?.title?.substring(0, 50),
+  })
+  
   // Guard: If no data or no items, don't render
   if (!data || !data.items || !Array.isArray(data.items) || data.items.length === 0) {
-    console.warn('[Features] Missing or invalid data:', { 
+    console.warn('🔴 [Features] NOT RENDERING - Missing data:', { 
       hasData: !!data,
       hasItems: !!data?.items,
       itemsIsArray: Array.isArray(data?.items),
       itemsLength: data?.items?.length,
-      dataKeys: data ? Object.keys(data) : [],
-      data,
     })
     return null
   }
+  
+  console.log('🟢 [Features] RENDERING')
 
   const { title, subtitle, items } = data
 

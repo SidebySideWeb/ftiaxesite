@@ -15,16 +15,23 @@ type HeroProps = {
 }
 
 export default function Hero({ data }: HeroProps) {
+  console.log('🟡 [Hero] Component received:', {
+    hasData: !!data,
+    hasHeadline: !!data?.headline,
+    headline: data?.headline?.substring(0, 50),
+    dataKeys: data ? Object.keys(data) : [],
+  })
+  
   // Guard: If no data, don't render
   if (!data || !data.headline) {
-    console.warn('[Hero] Missing or invalid data:', { 
+    console.warn('🔴 [Hero] NOT RENDERING - Missing data:', { 
       hasData: !!data,
       hasHeadline: !!data?.headline,
-      dataKeys: data ? Object.keys(data) : [],
-      data,
     })
     return null
   }
+  
+  console.log('🟢 [Hero] RENDERING')
 
   const handleCTAClick = () => {
     const contactForm = document.getElementById("contact")

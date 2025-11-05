@@ -39,18 +39,25 @@ const colorMap = {
 }
 
 export default function Process({ data }: ProcessProps) {
+  console.log('🟡 [Process] Component received:', {
+    hasData: !!data,
+    hasSteps: !!data?.steps,
+    stepsLength: data?.steps?.length,
+    title: data?.title?.substring(0, 50),
+  })
+  
   // Guard: If no data or no steps, don't render
   if (!data || !data.steps || !Array.isArray(data.steps) || data.steps.length === 0) {
-    console.warn('[Process] Missing or invalid data:', { 
+    console.warn('🔴 [Process] NOT RENDERING - Missing data:', { 
       hasData: !!data,
       hasSteps: !!data?.steps,
       stepsIsArray: Array.isArray(data?.steps),
       stepsLength: data?.steps?.length,
-      dataKeys: data ? Object.keys(data) : [],
-      data,
     })
     return null
   }
+  
+  console.log('🟢 [Process] RENDERING')
 
   const { title, subtitle, steps } = data
 
