@@ -139,21 +139,34 @@ export default async function Page() {
       const client = createClientWithTenant(hostname)
       
       // Fetch home page from CMS
+      console.log('[Home Page] Fetching from CMS...', {
+        hostname,
+        payloadUrl: process.env.NEXT_PUBLIC_PAYLOAD_URL,
+      })
+      
       const homePageResult = await client.getPage('home')
+      console.log('[Home Page] API Response:', {
+        totalDocs: homePageResult.docs?.length || 0,
+        hasDocs: !!homePageResult.docs,
+      })
+      
       const homePage = homePageResult.docs?.[0]
 
       if (homePage) {
         // Debug: Log what we received from CMS
-        if (process.env.NODE_ENV === 'development') {
-          console.log('[Home Page] CMS Data:', {
-            hasSections: !!homePage.sections,
-            sectionsKeys: homePage.sections ? Object.keys(homePage.sections) : [],
-            hasHero: !!homePage.sections?.hero,
-            hasFeatures: !!homePage.sections?.features,
-            hasProcess: !!homePage.sections?.process,
-            hasContact: !!homePage.sections?.contact,
-          })
-        }
+        console.log('[Home Page] CMS Data:', {
+          hasSections: !!homePage.sections,
+          sectionsKeys: homePage.sections ? Object.keys(homePage.sections) : [],
+          hasHero: !!homePage.sections?.hero,
+          heroKeys: homePage.sections?.hero ? Object.keys(homePage.sections.hero) : [],
+          hasFeatures: !!homePage.sections?.features,
+          featuresKeys: homePage.sections?.features ? Object.keys(homePage.sections.features) : [],
+          hasProcess: !!homePage.sections?.process,
+          hasContact: !!homePage.sections?.contact,
+          heroHeadline: homePage.sections?.hero?.headline,
+          featuresTitle: homePage.sections?.features?.title,
+          featuresItemsLength: homePage.sections?.features?.items?.length,
+        })
 
         // Map CMS page data to component props
         // Use sections if available, otherwise fallback to default
@@ -194,18 +207,25 @@ export default async function Page() {
           }
 
           // Debug: Log what we're passing to components
-          if (process.env.NODE_ENV === 'development') {
-            console.log('[Home Page] Mapped Data:', {
-              hasHero: !!pageData.hero,
-              hasFeatures: !!pageData.features,
-              hasProcess: !!pageData.process,
-              hasContact: !!pageData.contact,
-              heroHeadline: pageData.hero?.headline,
-              featuresTitle: pageData.features?.title,
-              processTitle: pageData.process?.title,
-              contactTitle: pageData.contact?.title,
-            })
-          }
+          console.log('[Home Page] Mapped Data:', {
+            hasHero: !!pageData.hero,
+            hasFeatures: !!pageData.features,
+            hasProcess: !!pageData.process,
+            hasContact: !!pageData.contact,
+            heroHeadline: pageData.hero?.headline,
+            heroHasHeadline: !!pageData.hero?.headline,
+            featuresTitle: pageData.features?.title,
+            featuresItemsLength: pageData.features?.items?.length,
+            processTitle: pageData.process?.title,
+            processStepsLength: pageData.process?.steps?.length,
+            contactTitle: pageData.contact?.title,
+            validation: {
+              hasValidHero,
+              hasValidFeatures,
+              hasValidProcess,
+              hasValidContact,
+            },
+          })
         } else {
           // Fallback for pages without sections (legacy structure)
           pageData = {
@@ -229,11 +249,23 @@ export default async function Page() {
     if (error instanceof Error) {
       console.error('[Home Page] Error details:', {
         message: error.message,
+        stack: error.stack,
         hostname,
         payloadUrl: process.env.NEXT_PUBLIC_PAYLOAD_URL,
       })
     }
   }
+
+  // Final debug: Log what we're rendering
+  console.log('[Home Page] Final pageData:', {
+    hasHero: !!pageData.hero,
+    hasFeatures: !!pageData.features,
+    hasProcess: !!pageData.process,
+    hasContact: !!pageData.contact,
+    heroHeadline: pageData.hero?.headline,
+    featuresTitle: pageData.features?.title,
+    usingDefaultData: pageData === defaultData,
+  })
 
   return (
     <main>

@@ -17,9 +17,12 @@ type HeroProps = {
 export default function Hero({ data }: HeroProps) {
   // Guard: If no data, don't render
   if (!data || !data.headline) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('[Hero] Missing or invalid data:', { data })
-    }
+    console.warn('[Hero] Missing or invalid data:', { 
+      hasData: !!data,
+      hasHeadline: !!data?.headline,
+      dataKeys: data ? Object.keys(data) : [],
+      data,
+    })
     return null
   }
 
