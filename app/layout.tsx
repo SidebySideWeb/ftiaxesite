@@ -37,7 +37,7 @@ export default async function RootLayout({
   let headerData = {
     logo_text: "ftiaxesite.gr",
     menu: [
-      { label: "Λειτουργίες", link: "features" },
+      { label: "Χαρακτηριστικά", link: "features" },
       { label: "Διαδικασία", link: "process" },
     ],
     cta: {
@@ -59,7 +59,14 @@ export default async function RootLayout({
     }
   } catch (error) {
     // Fallback to default data if CMS is not available
-    console.error('Failed to fetch header data from CMS:', error)
+    console.error('[Layout] Failed to fetch header data from CMS:', error)
+    if (error instanceof Error) {
+      console.error('[Layout] Error details:', {
+        message: error.message,
+        hostname,
+        payloadUrl: process.env.NEXT_PUBLIC_PAYLOAD_URL,
+      })
+    }
   }
 
   return (

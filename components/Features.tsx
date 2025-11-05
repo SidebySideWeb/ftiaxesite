@@ -23,6 +23,14 @@ const iconMap: Record<string, any> = {
 }
 
 export default function Features({ data }: FeaturesProps) {
+  // Guard: If no data or no items, don't render
+  if (!data || !data.items || !Array.isArray(data.items) || data.items.length === 0) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[Features] Missing or invalid data:', { data })
+    }
+    return null
+  }
+
   const { title, subtitle, items } = data
 
   return (

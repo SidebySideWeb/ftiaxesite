@@ -39,6 +39,14 @@ const colorMap = {
 }
 
 export default function Process({ data }: ProcessProps) {
+  // Guard: If no data or no steps, don't render
+  if (!data || !data.steps || !Array.isArray(data.steps) || data.steps.length === 0) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[Process] Missing or invalid data:', { data })
+    }
+    return null
+  }
+
   const { title, subtitle, steps } = data
 
   return (

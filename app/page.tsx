@@ -143,28 +143,68 @@ export default async function Page() {
       const homePage = homePageResult.docs?.[0]
 
       if (homePage) {
+        // Debug: Log what we received from CMS
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[Home Page] CMS Data:', {
+            hasSections: !!homePage.sections,
+            sectionsKeys: homePage.sections ? Object.keys(homePage.sections) : [],
+            hasHero: !!homePage.sections?.hero,
+            hasFeatures: !!homePage.sections?.features,
+            hasProcess: !!homePage.sections?.process,
+            hasContact: !!homePage.sections?.contact,
+          })
+        }
+
         // Map CMS page data to component props
         // Use sections if available, otherwise fallback to default
         if (homePage.sections) {
+          // Helper to check if section has required data
+          const hasValidHero = homePage.sections.hero && homePage.sections.hero.headline
+          const hasValidFeatures = homePage.sections.features && 
+            homePage.sections.features.title && 
+            Array.isArray(homePage.sections.features.items) && 
+            homePage.sections.features.items.length > 0
+          const hasValidProcess = homePage.sections.process && 
+            homePage.sections.process.title && 
+            Array.isArray(homePage.sections.process.steps) && 
+            homePage.sections.process.steps.length > 0
+          const hasValidContact = homePage.sections.contact && 
+            homePage.sections.contact.title && 
+            homePage.sections.contact.form
+
           pageData = {
             header: homePage.sections.header || defaultData.header,
-            hero: {
-              headline: homePage.sections.hero?.headline || homePage.title || defaultData.hero.headline,
-              subheadline: homePage.sections.hero?.subheadline || homePage.description || defaultData.hero.subheadline,
-              cta: homePage.sections.hero?.cta || defaultData.hero.cta,
-              image: homePage.sections.hero?.image 
+            hero: hasValidHero ? {
+              headline: homePage.sections.hero.headline || homePage.title || defaultData.hero.headline,
+              subheadline: homePage.sections.hero.subheadline || homePage.description || defaultData.hero.subheadline,
+              cta: homePage.sections.hero.cta || defaultData.hero.cta,
+              image: homePage.sections.hero.image 
                 ? (typeof homePage.sections.hero.image === 'object' 
                     ? getAbsoluteMediaUrl(homePage.sections.hero.image.url)
                     : getAbsoluteMediaUrl(homePage.sections.hero.image))
                 : (typeof homePage.featuredImage === 'object' 
                     ? getAbsoluteMediaUrl(homePage.featuredImage.url)
                     : getAbsoluteMediaUrl(homePage.featuredImage) || defaultData.hero.image),
-              stats: homePage.sections.hero?.stats || defaultData.hero.stats,
-            },
-            features: homePage.sections.features || defaultData.features,
-            process: homePage.sections.process || defaultData.process,
-            contact: homePage.sections.contact || defaultData.contact,
+              stats: homePage.sections.hero.stats || defaultData.hero.stats,
+            } : defaultData.hero,
+            features: hasValidFeatures ? homePage.sections.features : defaultData.features,
+            process: hasValidProcess ? homePage.sections.process : defaultData.process,
+            contact: hasValidContact ? homePage.sections.contact : defaultData.contact,
             footer: homePage.sections.footer || defaultData.footer,
+          }
+
+          // Debug: Log what we're passing to components
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Home Page] Mapped Data:', {
+              hasHero: !!pageData.hero,
+              hasFeatures: !!pageData.features,
+              hasProcess: !!pageData.process,
+              hasContact: !!pageData.contact,
+              heroHeadline: pageData.hero?.headline,
+              featuresTitle: pageData.features?.title,
+              processTitle: pageData.process?.title,
+              contactTitle: pageData.contact?.title,
+            })
           }
         } else {
           // Fallback for pages without sections (legacy structure)
@@ -185,7 +225,14 @@ export default async function Page() {
     }
   } catch (error) {
     // Fallback to default data if CMS fetch fails
-    console.error('Failed to fetch page data from CMS:', error)
+    console.error('[Home Page] Failed to fetch page data from CMS:', error)
+    if (error instanceof Error) {
+      console.error('[Home Page] Error details:', {
+        message: error.message,
+        hostname,
+        payloadUrl: process.env.NEXT_PUBLIC_PAYLOAD_URL,
+      })
+    }
   }
 
   return (

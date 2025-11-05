@@ -102,17 +102,48 @@ export class PayloadApiClient {
       })
     }
 
-    const response = await fetch(url, {
-      ...fetchOptions,
-      headers,
-    })
+    try {
+      const response = await fetch(url, {
+        ...fetchOptions,
+        headers,
+      })
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Request failed' }))
-      throw new Error(error.message || `API request failed: ${response.statusText}`)
+      if (!response.ok) {
+        const errorText = await response.text()
+        let errorMessage = `API request failed: ${response.statusText}`
+        try {
+          const error = JSON.parse(errorText)
+          errorMessage = error.message || errorMessage
+        } catch {
+          errorMessage = errorText || errorMessage
+        }
+        
+        // Enhanced error logging
+        console.error('[Payload API Error]', {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          tenantSlug: this.tenantSlug,
+          tenantDomain: this.tenantDomain,
+          error: errorMessage,
+        })
+        
+        throw new Error(errorMessage)
+      }
+
+      return response.json()
+    } catch (error) {
+      // Network errors or other fetch failures
+      if (error instanceof Error) {
+        console.error('[Payload API Request Failed]', {
+          url,
+          tenantSlug: this.tenantSlug,
+          tenantDomain: this.tenantDomain,
+          error: error.message,
+        })
+      }
+      throw error
     }
-
-    return response.json()
   }
 
   /**
@@ -295,11 +326,21 @@ export function getAbsoluteMediaUrl(url: string | undefined | null): string {
 
 /**
  * Helper function to detect tenant from hostname (for domain-based routing)
+ * Strips port numbers and handles localhost specially
  */
 export function getTenantFromHostname(hostname: string): string | null {
-  // Extract tenant domain from hostname
-  // This assumes your tenant domains are subdomains or exact matches
-  return hostname || null
+  if (!hostname) return null
+  
+  // Remove port number if present (e.g., "localhost:3001" -> "localhost")
+  const domain = hostname.split(':')[0]
+  
+  // For localhost, use tenant slug from env or return null
+  if (domain === 'localhost' || domain === '127.0.0.1') {
+    return process.env.NEXT_PUBLIC_TENANT_SLUG || null
+  }
+  
+  // For production, return the domain as-is (e.g., "ftiaxesite.gr")
+  return domain
 }
 
 /**
@@ -308,12 +349,31 @@ export function getTenantFromHostname(hostname: string): string | null {
  */
 export function createClientWithTenant(hostname?: string, locale?: string): PayloadApiClient {
   const baseUrl = getBaseUrl()
+  
+  if (!baseUrl) {
+    console.warn('[Payload Client] NEXT_PUBLIC_PAYLOAD_URL is not set. CMS requests will fail.')
+  }
+  
   const tenantDomain = hostname ? getTenantFromHostname(hostname) : undefined
+  const tenantSlug = process.env.NEXT_PUBLIC_TENANT_SLUG || undefined
 
-  return createPayloadClient({
+  // Use tenant slug for localhost, tenant domain for production
+  const client = createPayloadClient({
     baseUrl,
-    tenantDomain: tenantDomain || undefined,
+    tenantSlug: tenantDomain === 'localhost' || tenantDomain === '127.0.0.1' ? tenantSlug : undefined,
+    tenantDomain: tenantDomain && tenantDomain !== 'localhost' && tenantDomain !== '127.0.0.1' ? tenantDomain : undefined,
     locale,
   })
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Payload Client]', {
+      baseUrl,
+      tenantSlug,
+      tenantDomain,
+      hostname,
+    })
+  }
+
+  return client
 }
 
