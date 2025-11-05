@@ -4,7 +4,7 @@
  */
 
 import 'dotenv/config'
-import { createClientWithTenant } from '../lib/payload-client'
+import { createClientWithTenant, type PayloadResponse } from '../lib/payload-client'
 
 async function testCMSConnection() {
   console.log('🔍 Testing CMS Connection...\n')
@@ -83,7 +83,7 @@ async function testCMSConnection() {
   
   try {
     const client = createClientWithTenant('ftiaxesite.gr')
-    const tenantResult = await client.getTenant()
+    const tenantResult = await client.getTenant() as PayloadResponse
     
     console.log('  📊 Tenant Results:')
     console.log(`    - Total docs: ${tenantResult.docs?.length || 0}`)
