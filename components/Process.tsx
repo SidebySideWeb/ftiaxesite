@@ -53,11 +53,12 @@ export default function Process({ data }: ProcessProps) {
       hasSteps: !!data?.steps,
       stepsIsArray: Array.isArray(data?.steps),
       stepsLength: data?.steps?.length,
+      data,
     })
-    return null
+    return <div style={{background: 'yellow', padding: '20px', margin: '20px'}}>🔴 PROCESS: Missing steps - Steps: {data?.steps?.length || 0} - Data: {JSON.stringify(data).substring(0, 200)}</div>
   }
   
-  console.log('🟢 [Process] RENDERING')
+  console.log('🟢 [Process] RENDERING with', data.steps.length, 'steps')
 
   const { title, subtitle, steps } = data
 

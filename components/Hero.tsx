@@ -27,11 +27,12 @@ export default function Hero({ data }: HeroProps) {
     console.warn('🔴 [Hero] NOT RENDERING - Missing data:', { 
       hasData: !!data,
       hasHeadline: !!data?.headline,
+      data,
     })
-    return null
+    return <div style={{background: 'yellow', padding: '20px', margin: '20px'}}>🔴 HERO: Missing headline - Data: {JSON.stringify(data)}</div>
   }
   
-  console.log('🟢 [Hero] RENDERING')
+  console.log('🟢 [Hero] RENDERING with data:', { headline: data.headline })
 
   const handleCTAClick = () => {
     const contactForm = document.getElementById("contact")

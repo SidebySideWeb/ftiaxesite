@@ -37,11 +37,12 @@ export default function Features({ data }: FeaturesProps) {
       hasItems: !!data?.items,
       itemsIsArray: Array.isArray(data?.items),
       itemsLength: data?.items?.length,
+      data,
     })
-    return null
+    return <div style={{background: 'yellow', padding: '20px', margin: '20px'}}>🔴 FEATURES: Missing items - Items: {data?.items?.length || 0} - Data: {JSON.stringify(data).substring(0, 200)}</div>
   }
   
-  console.log('🟢 [Features] RENDERING')
+  console.log('🟢 [Features] RENDERING with', data.items.length, 'items')
 
   const { title, subtitle, items } = data
 
