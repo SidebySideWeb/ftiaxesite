@@ -154,6 +154,7 @@ export default async function Page() {
       console.log('🔵 [Home Page] API Response:', {
         totalDocs: homePageResult.docs?.length || 0,
         hasDocs: !!homePageResult.docs,
+        fullResponse: JSON.stringify(homePageResult).substring(0, 500),
       })
       
       const homePage = homePageResult.docs?.[0]
@@ -171,6 +172,16 @@ export default async function Page() {
         // Map CMS page data to component props - SIMPLIFIED: always use sections if they exist
         if (homePage.sections) {
           console.log('🔵 [Home Page] Using sections data')
+          console.log('🔵 [Home Page] Raw sections:', {
+            hasHero: !!homePage.sections.hero,
+            hasFeatures: !!homePage.sections.features,
+            hasProcess: !!homePage.sections.process,
+            hasContact: !!homePage.sections.contact,
+            heroKeys: homePage.sections.hero ? Object.keys(homePage.sections.hero) : [],
+            featuresKeys: homePage.sections.features ? Object.keys(homePage.sections.features) : [],
+            processKeys: homePage.sections.process ? Object.keys(homePage.sections.process) : [],
+            contactKeys: homePage.sections.contact ? Object.keys(homePage.sections.contact) : [],
+          })
           
           pageData = {
             header: homePage.sections.header || defaultData.header,
@@ -192,6 +203,14 @@ export default async function Page() {
             contact: homePage.sections.contact || defaultData.contact,
             footer: homePage.sections.footer || defaultData.footer,
           }
+          
+          console.log('🔵 [Home Page] After mapping:', {
+            heroHeadline: pageData.hero?.headline,
+            featuresTitle: pageData.features?.title,
+            featuresItemsCount: pageData.features?.items?.length,
+            processTitle: pageData.process?.title,
+            processStepsCount: pageData.process?.steps?.length,
+          })
 
           console.log('🔵 [Home Page] Mapped Data:', {
             hasHero: !!pageData.hero,
