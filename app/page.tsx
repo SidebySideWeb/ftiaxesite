@@ -128,8 +128,13 @@ const defaultData = {
 }
 
 export default async function Page() {
+  // LOG AT THE VERY TOP - This should always execute
+  console.log('🚨🚨🚨 [Page] FUNCTION CALLED - This proves the page component is being executed!')
+  
   const headersList = await headers()
   const hostname = headersList.get('host') || ''
+  
+  console.log('🚨🚨🚨 [Page] Hostname:', hostname)
 
   // Try to fetch from Payload CMS, fallback to default data
   let pageData = defaultData
@@ -246,8 +251,25 @@ export default async function Page() {
     processTitle: pageData.process?.title?.substring(0, 50),
   })
 
+  console.log('🚨🚨🚨 [Page] About to return JSX')
+  
   return (
     <main>
+      {/* DEBUG: Always visible indicator that page is rendering */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        background: '#ff0000',
+        color: '#fff',
+        padding: '10px',
+        zIndex: 9999,
+        fontSize: '12px',
+        fontFamily: 'monospace',
+      }}>
+        🔵 PAGE RENDERING | CMS: {cmsDataReceived ? '✅' : '❌'} | Hero: {pageData.hero?.headline ? '✅' : '❌'} | Features: {pageData.features?.title ? '✅' : '❌'} | Process: {pageData.process?.title ? '✅' : '❌'}
+      </div>
       <Hero data={pageData.hero} />
       <Features data={pageData.features} />
       <Process data={pageData.process} />
