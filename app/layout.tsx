@@ -53,8 +53,10 @@ export default async function RootLayout({
       const homePageResult = await client.getPage('home')
       const homePage = homePageResult.docs?.[0]
       
-      if (homePage?.sections?.header) {
-        headerData = homePage.sections.header
+      // Use new tenant-specific section field names: sections-ftiaxesite.*
+      const cmsHeader = homePage?.['sections-ftiaxesite']?.['header-ftiaxesite']
+      if (cmsHeader) {
+        headerData = cmsHeader
       }
     }
   } catch (error) {

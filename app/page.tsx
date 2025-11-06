@@ -142,21 +142,26 @@ export default async function Page() {
 
       console.log('[Page] Homepage fetch result:', {
         found: !!homePage,
-        hasSections: !!homePage?.sections,
-        sectionsKeys: homePage?.sections ? Object.keys(homePage.sections) : [],
-        hero: !!homePage?.sections?.hero,
-        features: !!homePage?.sections?.features,
+        hasSectionsFtiaxesite: !!homePage?.['sections-ftiaxesite'],
+        sectionsKeys: homePage?.['sections-ftiaxesite'] ? Object.keys(homePage['sections-ftiaxesite']) : [],
+        hero: !!homePage?.['sections-ftiaxesite']?.['hero-ftiaxesite'],
+        features: !!homePage?.['sections-ftiaxesite']?.['features-ftiaxesite'],
       })
 
-      if (homePage && homePage.sections) {
+      // Use new tenant-specific section field names: sections-ftiaxesite.*
+      const sectionsFtiaxesite = homePage?.['sections-ftiaxesite']
+      
+      if (homePage && sectionsFtiaxesite) {
         // Merge CMS data with defaults to ensure all required fields are present
-        const cmsHero = homePage.sections.hero
-        const cmsFeatures = homePage.sections.features
-        const cmsProcess = homePage.sections.process
-        const cmsContact = homePage.sections.contact
+        const cmsHeader = sectionsFtiaxesite['header-ftiaxesite']
+        const cmsHero = sectionsFtiaxesite['hero-ftiaxesite']
+        const cmsFeatures = sectionsFtiaxesite['features-ftiaxesite']
+        const cmsProcess = sectionsFtiaxesite['process-ftiaxesite']
+        const cmsContact = sectionsFtiaxesite['contact-ftiaxesite']
+        const cmsFooter = sectionsFtiaxesite['footer-ftiaxesite']
 
         pageData = {
-          header: homePage.sections.header || defaultData.header,
+          header: cmsHeader || defaultData.header,
           hero: {
             headline: cmsHero?.headline || homePage.title || defaultData.hero.headline,
             subheadline: cmsHero?.subheadline || homePage.description || defaultData.hero.subheadline,
@@ -204,7 +209,7 @@ export default async function Page() {
                 },
               }
             : defaultData.contact,
-          footer: homePage.sections.footer || defaultData.footer,
+          footer: cmsFooter || defaultData.footer,
         }
       }
     }
