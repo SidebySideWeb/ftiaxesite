@@ -140,6 +140,14 @@ export default async function Page() {
       const homePageResult = await client.getPage('home')
       const homePage = homePageResult.docs?.[0]
 
+      console.log('[Page] Homepage fetch result:', {
+        found: !!homePage,
+        hasSections: !!homePage?.sections,
+        sectionsKeys: homePage?.sections ? Object.keys(homePage.sections) : [],
+        hero: !!homePage?.sections?.hero,
+        features: !!homePage?.sections?.features,
+      })
+
       if (homePage && homePage.sections) {
         // Merge CMS data with defaults to ensure all required fields are present
         const cmsHero = homePage.sections.hero
