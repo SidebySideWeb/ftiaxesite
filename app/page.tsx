@@ -141,25 +141,61 @@ export default async function Page() {
       const homePage = homePageResult.docs?.[0]
 
       if (homePage && homePage.sections) {
-        // Use sections directly from CMS
+        // Merge CMS data with defaults to ensure all required fields are present
+        const cmsHero = homePage.sections.hero
+        const cmsFeatures = homePage.sections.features
+        const cmsProcess = homePage.sections.process
+        const cmsContact = homePage.sections.contact
+
         pageData = {
           header: homePage.sections.header || defaultData.header,
           hero: {
-            headline: homePage.sections.hero?.headline || homePage.title || defaultData.hero.headline,
-            subheadline: homePage.sections.hero?.subheadline || homePage.description || defaultData.hero.subheadline,
-            cta: homePage.sections.hero?.cta || defaultData.hero.cta,
-            image: homePage.sections.hero?.image 
-              ? (typeof homePage.sections.hero.image === 'object' 
-                  ? getAbsoluteMediaUrl(homePage.sections.hero.image.url)
-                  : getAbsoluteMediaUrl(homePage.sections.hero.image))
-              : (typeof homePage.featuredImage === 'object' 
+            headline: cmsHero?.headline || homePage.title || defaultData.hero.headline,
+            subheadline: cmsHero?.subheadline || homePage.description || defaultData.hero.subheadline,
+            cta: cmsHero?.cta || defaultData.hero.cta,
+            image: cmsHero?.image 
+              ? (typeof cmsHero.image === 'object' && cmsHero.image?.url
+                  ? getAbsoluteMediaUrl(cmsHero.image.url)
+                  : getAbsoluteMediaUrl(typeof cmsHero.image === 'string' ? cmsHero.image : ''))
+              : (typeof homePage.featuredImage === 'object' && homePage.featuredImage?.url
                   ? getAbsoluteMediaUrl(homePage.featuredImage.url)
-                  : getAbsoluteMediaUrl(homePage.featuredImage) || defaultData.hero.image),
-            stats: homePage.sections.hero?.stats || defaultData.hero.stats,
+                  : getAbsoluteMediaUrl(typeof homePage.featuredImage === 'string' ? homePage.featuredImage : '') || defaultData.hero.image),
+            stats: cmsHero?.stats && Array.isArray(cmsHero.stats) && cmsHero.stats.length > 0 
+              ? cmsHero.stats 
+              : defaultData.hero.stats,
           },
-          features: homePage.sections.features || defaultData.features,
-          process: homePage.sections.process || defaultData.process,
-          contact: homePage.sections.contact || defaultData.contact,
+          // Only use CMS features if it has items array, otherwise use defaults
+          features: (cmsFeatures?.items && Array.isArray(cmsFeatures.items) && cmsFeatures.items.length > 0)
+            ? {
+                title: cmsFeatures.title || defaultData.features.title,
+                subtitle: cmsFeatures.subtitle || defaultData.features.subtitle,
+                items: cmsFeatures.items,
+              }
+            : defaultData.features,
+          // Only use CMS process if it has steps array, otherwise use defaults
+          process: (cmsProcess?.steps && Array.isArray(cmsProcess.steps) && cmsProcess.steps.length > 0)
+            ? {
+                title: cmsProcess.title || defaultData.process.title,
+                subtitle: cmsProcess.subtitle || defaultData.process.subtitle,
+                steps: cmsProcess.steps,
+              }
+            : defaultData.process,
+          // Merge contact data with defaults
+          contact: cmsContact
+            ? {
+                title: cmsContact.title || defaultData.contact.title,
+                subtitle: cmsContact.subtitle || defaultData.contact.subtitle,
+                form: {
+                  name: cmsContact.form?.name || defaultData.contact.form.name,
+                  email: cmsContact.form?.email || defaultData.contact.form.email,
+                  phone: cmsContact.form?.phone || defaultData.contact.form.phone,
+                  voicePrompt: cmsContact.form?.voicePrompt || defaultData.contact.form.voicePrompt,
+                  voiceListening: cmsContact.form?.voiceListening || defaultData.contact.form.voiceListening,
+                  voiceTranscript: cmsContact.form?.voiceTranscript || defaultData.contact.form.voiceTranscript,
+                  submit: cmsContact.form?.submit || defaultData.contact.form.submit,
+                },
+              }
+            : defaultData.contact,
           footer: homePage.sections.footer || defaultData.footer,
         }
       }
