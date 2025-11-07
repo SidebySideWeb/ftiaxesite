@@ -343,6 +343,22 @@ export function getTenantFromHostname(hostname: string): string | null {
   return domain
 }
 
+function inferTenantSlugFromDomain(domain?: string): string | undefined {
+  if (!domain) return undefined
+
+  const normalized = domain.toLowerCase()
+  const domainMap: Record<string, string> = {
+    'ftiaxesite.gr': 'ftiaxesite',
+    'www.ftiaxesite.gr': 'ftiaxesite',
+    'ftiaxesite.vercel.app': 'ftiaxesite',
+    'kalitechnia.gr': 'kalitechnia',
+    'www.kalitechnia.gr': 'kalitechnia',
+    'kalitechnia.vercel.app': 'kalitechnia',
+  }
+
+  return domainMap[normalized]
+}
+
 /**
  * Helper function to create a client with automatic tenant detection
  * Use this in Next.js server components or API routes
@@ -362,8 +378,11 @@ export function createClientWithTenant(hostname?: string, locale?: string): Payl
   let tenantDomain: string | undefined
 
   if (!tenantSlug) {
-    // Fallback to detected domain (for multi-domain deployments)
-    if (detectedDomain && detectedDomain !== 'localhost' && detectedDomain !== '127.0.0.1') {
+    const inferredSlug = inferTenantSlugFromDomain(detectedDomain)
+    if (inferredSlug) {
+      tenantSlug = inferredSlug
+      tenantDomain = detectedDomain
+    } else if (detectedDomain && detectedDomain !== 'localhost' && detectedDomain !== '127.0.0.1') {
       tenantDomain = detectedDomain
     }
   }
