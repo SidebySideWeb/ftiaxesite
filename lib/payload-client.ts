@@ -349,19 +349,29 @@ export function getTenantFromHostname(hostname: string): string | null {
  */
 export function createClientWithTenant(hostname?: string, locale?: string): PayloadApiClient {
   const baseUrl = getBaseUrl()
-  
+
   if (!baseUrl) {
     console.warn('[Payload Client] NEXT_PUBLIC_PAYLOAD_URL is not set. CMS requests will fail.')
   }
-  
-  const tenantDomain = hostname ? getTenantFromHostname(hostname) : undefined
-  const tenantSlug = process.env.NEXT_PUBLIC_TENANT_SLUG || undefined
 
-  // Use tenant slug for localhost, tenant domain for production
+  const detectedDomain = hostname ? getTenantFromHostname(hostname) : undefined
+  const envTenantSlug = process.env.NEXT_PUBLIC_TENANT_SLUG || undefined
+
+  // Prefer explicit tenant slug when available
+  let tenantSlug: string | undefined = envTenantSlug
+  let tenantDomain: string | undefined
+
+  if (!tenantSlug) {
+    // Fallback to detected domain (for multi-domain deployments)
+    if (detectedDomain && detectedDomain !== 'localhost' && detectedDomain !== '127.0.0.1') {
+      tenantDomain = detectedDomain
+    }
+  }
+
   const client = createPayloadClient({
     baseUrl,
-    tenantSlug: tenantDomain === 'localhost' || tenantDomain === '127.0.0.1' ? tenantSlug : undefined,
-    tenantDomain: tenantDomain && tenantDomain !== 'localhost' && tenantDomain !== '127.0.0.1' ? tenantDomain : undefined,
+    tenantSlug,
+    tenantDomain,
     locale,
   })
 
