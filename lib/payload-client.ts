@@ -343,7 +343,7 @@ export function getTenantFromHostname(hostname: string): string | null {
   return domain
 }
 
-function inferTenantSlugFromDomain(domain?: string): string | undefined {
+function inferTenantSlugFromDomain(domain?: string | null): string | undefined {
   if (!domain) return undefined
 
   const normalized = domain.toLowerCase()
