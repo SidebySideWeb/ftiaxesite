@@ -355,8 +355,19 @@ function inferTenantSlugFromDomain(domain?: string | null): string | undefined {
     'www.kalitechnia.gr': 'kalitechnia',
     'kalitechnia.vercel.app': 'kalitechnia',
   }
+ 
+  const mapped = domainMap[normalized]
+  if (mapped) return mapped
 
-  return domainMap[normalized]
+  if (normalized.includes('ftiaxesite')) {
+    return 'ftiaxesite'
+  }
+
+  if (normalized.includes('kalitechnia')) {
+    return 'kalitechnia'
+  }
+
+  return undefined
 }
 
 /**
@@ -378,8 +389,8 @@ export function createClientWithTenant(hostname?: string, locale?: string): Payl
    let tenantDomain: string | undefined
  
    if (!tenantSlug) {
-     const inferredSlug = inferTenantSlugFromDomain(detectedDomain)
      const normalizedDomain = detectedDomain ?? undefined
+     const inferredSlug = inferTenantSlugFromDomain(normalizedDomain)
      if (inferredSlug) {
        tenantSlug = inferredSlug
        tenantDomain = normalizedDomain
