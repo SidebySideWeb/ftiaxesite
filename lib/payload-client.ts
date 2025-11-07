@@ -372,20 +372,21 @@ export function createClientWithTenant(hostname?: string, locale?: string): Payl
 
   const detectedDomain = hostname ? getTenantFromHostname(hostname) : undefined
   const envTenantSlug = process.env.NEXT_PUBLIC_TENANT_SLUG || undefined
-
-  // Prefer explicit tenant slug when available
-  let tenantSlug: string | undefined = envTenantSlug
-  let tenantDomain: string | undefined
-
-  if (!tenantSlug) {
-    const inferredSlug = inferTenantSlugFromDomain(detectedDomain)
-    if (inferredSlug) {
-      tenantSlug = inferredSlug
-      tenantDomain = detectedDomain
-    } else if (detectedDomain && detectedDomain !== 'localhost' && detectedDomain !== '127.0.0.1') {
-      tenantDomain = detectedDomain
-    }
-  }
+ 
+   // Prefer explicit tenant slug when available
+   let tenantSlug: string | undefined = envTenantSlug
+   let tenantDomain: string | undefined
+ 
+   if (!tenantSlug) {
+     const inferredSlug = inferTenantSlugFromDomain(detectedDomain)
+     const normalizedDomain = detectedDomain ?? undefined
+     if (inferredSlug) {
+       tenantSlug = inferredSlug
+       tenantDomain = normalizedDomain
+     } else if (normalizedDomain && normalizedDomain !== 'localhost' && normalizedDomain !== '127.0.0.1') {
+       tenantDomain = normalizedDomain
+     }
+   }
 
   const client = createPayloadClient({
     baseUrl,
