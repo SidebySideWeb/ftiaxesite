@@ -1,129 +1,100 @@
 import { headers } from "next/headers"
 import { createClientWithTenant, getAbsoluteMediaUrl } from "@/lib/payload-client"
+import { defaultHeaderData, defaultFooterData, mapHeaderContent, mapFooterContent } from "@/lib/content-mappers"
 import Hero from "@/components/Hero"
 import Features from "@/components/Features"
 import Process from "@/components/Process"
 import ContactForm from "@/components/ContactForm"
 import Footer from "@/components/Footer"
 
-// Default fallback data (matches the YAML structure)
-const defaultData = {
-  header: {
-    logo_text: "ftiaxesite.gr",
-    menu: [
-      { label: "Λειτουργίες", link: "features" },
-      { label: "Διαδικασία", link: "process" },
-    ],
-    cta: {
-      label: "Φτιάξε το site σου",
-      link: "contact",
+const defaultHero = {
+  headline: "Φτιάξε το site σου σε 48 ώρες — από 250€",
+  subheadline: "Με τη δύναμη της Τεχνητής Νοημοσύνης, δημιουργούμε γρήγορα, οικονομικά και επαγγελματικά websites.",
+  cta: "Ξεκίνα τώρα",
+  image: "/modern-ai-website-development-illustration.jpg",
+  stats: [
+    { value: "48h", label: "Παράδοση" },
+    { value: "250€", label: "Από" },
+    { value: "AI", label: "Τεχνολογία" },
+  ],
+}
+
+const defaultFeatures = {
+  title: "Γιατί να μας επιλέξεις",
+  subtitle: "Όλα όσα χρειάζεσαι για να έχεις έτοιμο το website σου σε 48 ώρες",
+  items: [
+    {
+      icon: "clock",
+      title: "Παράδοση σε 48 ώρες",
+      description: "Το website σου είναι έτοιμο μέσα σε δύο μέρες.",
     },
-  },
-  hero: {
-    headline: "Φτιάξε το site σου σε 48 ώρες — από 250€",
-    subheadline: "Με τη δύναμη της Τεχνητής Νοημοσύνης, δημιουργούμε γρήγορα, οικονομικά και επαγγελματικά websites.",
-    cta: "Ξεκίνα τώρα",
-    image: "/modern-ai-website-development-illustration.jpg",
-    stats: [
-      { value: "48h", label: "Παράδοση" },
-      { value: "250€", label: "Από" },
-      { value: "AI", label: "Τεχνολογία" },
-    ],
-  },
-  features: {
-    title: "Γιατί να μας επιλέξεις",
-    subtitle: "Όλα όσα χρειάζεσαι για να έχεις έτοιμο το website σου σε 48 ώρες",
-    items: [
-      {
-        icon: "clock",
-        title: "Παράδοση σε 48 ώρες",
-        description: "Το website σου είναι έτοιμο μέσα σε δύο μέρες.",
-      },
-      {
-        icon: "euro",
-        title: "Από 250€",
-        description: "Χαμηλό κόστος χωρίς κρυφές χρεώσεις.",
-      },
-      {
-        icon: "trendingUp",
-        title: "SEO & Analytics",
-        description: "Έτοιμο για Google με ενσωματωμένο Tag Manager.",
-      },
-      {
-        icon: "shield",
-        title: "Cookie Consent",
-        description: "Συμμόρφωση με GDPR και απόλυτη διαφάνεια.",
-      },
-      {
-        icon: "smartphone",
-        title: "Responsive Design",
-        description: "Λειτουργεί άψογα σε κινητά, tablet και υπολογιστές.",
-      },
-      {
-        icon: "zap",
-        title: "AI Technology",
-        description: "Χρησιμοποιούμε Τεχνητή Νοημοσύνη για γρήγορη ανάπτυξη.",
-      },
-    ],
-  },
-  process: {
-    title: "Πώς δουλεύουμε",
-    subtitle: "Από την ιδέα στην online παρουσία — απλά, γρήγορα και αποτελεσματικά.",
-    steps: [
-      {
-        number: "01",
-        icon: "fileText",
-        title: "Συμπληρώνεις τη φόρμα",
-        description: "Μας λες τι χρειάζεσαι.",
-        color: "teal" as const,
-      },
-      {
-        number: "02",
-        icon: "wand2",
-        title: "Δημιουργούμε το σχέδιο",
-        description: "Χρησιμοποιούμε AI για να σχεδιάσουμε το website σου.",
-        color: "navy" as const,
-      },
-      {
-        number: "03",
-        icon: "checkCircle2",
-        title: "Παραδίδουμε σε 48 ώρες",
-        description: "Παραλαμβάνεις έτοιμο site με SEO & Analytics.",
-        color: "teal" as const,
-      },
-    ],
-  },
-  contact: {
-    title: "Ξεκίνα τη κατασκευή της σελίδας σου σήμερα",
-    subtitle: "Πες μας τι χρειάζεσαι — μίλησε το brief σου με ένα κλικ",
-    form: {
-      name: "Όνομα",
-      email: "Email",
-      phone: "Τηλέφωνο",
-      voicePrompt: "Πάτησε το μικρόφωνο και πες μας για το project σου",
-      voiceListening: "Σε ακούω... Μίλα τώρα!",
-      voiceTranscript: "Αυτό που είπες:",
-      submit: "Αποστολή",
+    {
+      icon: "euro",
+      title: "Από 250€",
+      description: "Χαμηλό κόστος χωρίς κρυφές χρεώσεις.",
     },
-  },
-  footer: {
-    brand: {
-      name: "ftiaxesite.gr",
-      tagline: "AI Websites σε 48 Ώρες",
+    {
+      icon: "trendingUp",
+      title: "SEO & Analytics",
+      description: "Έτοιμο για Google με ενσωματωμένο Tag Manager.",
     },
-    contact: {
-      title: "Επικοινωνία",
-      email: "info@ftiaxesite.gr",
-      phone: "+30 210 1234567",
+    {
+      icon: "shield",
+      title: "Cookie Consent",
+      description: "Συμμόρφωση με GDPR και απόλυτη διαφάνεια.",
     },
-    links: {
-      title: "Χρήσιμα",
-      items: [
-        { label: "Όροι Χρήσης", href: "/terms" },
-        { label: "Πολιτική Απορρήτου", href: "/privacy" },
-      ],
+    {
+      icon: "smartphone",
+      title: "Responsive Design",
+      description: "Λειτουργεί άψογα σε κινητά, tablet και υπολογιστές.",
     },
-    copyright: "© 2025 ftiaxesite.gr – Κατασκευή Ιστοσελίδων με AI",
+    {
+      icon: "zap",
+      title: "AI Technology",
+      description: "Χρησιμοποιούμε Τεχνητή Νοημοσύνη για γρήγορη ανάπτυξη.",
+    },
+  ],
+}
+
+const defaultProcess = {
+  title: "Πώς δουλεύουμε",
+  subtitle: "Από την ιδέα στην online παρουσία — απλά, γρήγορα και αποτελεσματικά.",
+  steps: [
+    {
+      number: "01",
+      icon: "fileText",
+      title: "Συμπληρώνεις τη φόρμα",
+      description: "Μας λες τι χρειάζεσαι.",
+      color: "teal" as const,
+    },
+    {
+      number: "02",
+      icon: "wand2",
+      title: "Δημιουργούμε το σχέδιο",
+      description: "Χρησιμοποιούμε AI για να σχεδιάσουμε το website σου.",
+      color: "navy" as const,
+    },
+    {
+      number: "03",
+      icon: "checkCircle2",
+      title: "Παραδίδουμε σε 48 ώρες",
+      description: "Παραλαμβάνεις έτοιμο site με SEO & Analytics.",
+      color: "teal" as const,
+    },
+  ],
+}
+
+const defaultContact = {
+  title: "Ξεκίνα τη κατασκευή της σελίδας σου σήμερα",
+  subtitle: "Πες μας τι χρειάζεσαι — μίλησε το brief σου με ένα κλικ",
+  form: {
+    name: "Όνομα",
+    email: "Email",
+    phone: "Τηλέφωνο",
+    voicePrompt: "Πάτησε το μικρόφωνο και πες μας για το project σου",
+    voiceListening: "Σε ακούω... Μίλα τώρα!",
+    voiceTranscript: "Αυτό που είπες:",
+    submit: "Αποστολή",
   },
 }
 
@@ -131,100 +102,95 @@ export default async function Page() {
   const headersList = await headers()
   const hostname = headersList.get('host') || ''
 
-  // Try to fetch from Payload CMS, fallback to default data
-  let pageData = defaultData
+  let headerData = defaultHeaderData
+  let footerData = defaultFooterData
+  let heroData = defaultHero
+  let featuresData = defaultFeatures
+  let processData = defaultProcess
+  let contactData = defaultContact
 
   try {
     if (process.env.NEXT_PUBLIC_PAYLOAD_URL) {
       const client = createClientWithTenant(hostname)
-      const homePageResult = await client.getPage('home')
-      const homePage = homePageResult.docs?.[0]
-
-      console.log('[Page] Homepage fetch result:', {
-        found: !!homePage,
-        hasSectionsFtiaxesite: !!homePage?.['sections-ftiaxesite'],
-        sectionsKeys: homePage?.['sections-ftiaxesite'] ? Object.keys(homePage['sections-ftiaxesite']) : [],
-        hero: !!homePage?.['sections-ftiaxesite']?.['hero-ftiaxesite'],
-        features: !!homePage?.['sections-ftiaxesite']?.['features-ftiaxesite'],
+      const homepage = await client.getPageBySlug('ftiaxesite-homepage', {
+        params: {
+          depth: 0,
+        },
       })
 
-      // Use new tenant-specific section field names: sections-ftiaxesite.*
-      const sectionsFtiaxesite = homePage?.['sections-ftiaxesite']
-      
-      if (homePage && sectionsFtiaxesite) {
-        // Merge CMS data with defaults to ensure all required fields are present
-        const cmsHeader = sectionsFtiaxesite['header-ftiaxesite']
-        const cmsHero = sectionsFtiaxesite['hero-ftiaxesite']
-        const cmsFeatures = sectionsFtiaxesite['features-ftiaxesite']
-        const cmsProcess = sectionsFtiaxesite['process-ftiaxesite']
-        const cmsContact = sectionsFtiaxesite['contact-ftiaxesite']
-        const cmsFooter = sectionsFtiaxesite['footer-ftiaxesite']
+      const content = (homepage as any)?.content || {}
+      const sections = content.sections || {}
+      const shared = content.shared || {}
 
-        pageData = {
-          header: cmsHeader || defaultData.header,
-          hero: {
-            headline: cmsHero?.headline || homePage.title || defaultData.hero.headline,
-            subheadline: cmsHero?.subheadline || homePage.description || defaultData.hero.subheadline,
-            cta: cmsHero?.cta || defaultData.hero.cta,
-            image: cmsHero?.image 
-              ? (typeof cmsHero.image === 'object' && cmsHero.image?.url
-                  ? getAbsoluteMediaUrl(cmsHero.image.url)
-                  : getAbsoluteMediaUrl(typeof cmsHero.image === 'string' ? cmsHero.image : ''))
-              : (typeof homePage.featuredImage === 'object' && homePage.featuredImage?.url
-                  ? getAbsoluteMediaUrl(homePage.featuredImage.url)
-                  : getAbsoluteMediaUrl(typeof homePage.featuredImage === 'string' ? homePage.featuredImage : '') || defaultData.hero.image),
-            stats: cmsHero?.stats && Array.isArray(cmsHero.stats) && cmsHero.stats.length > 0 
-              ? cmsHero.stats 
-              : defaultData.hero.stats,
+      if (shared.headerFooterPageSlug) {
+        const headerFooterPage = await client.getPageBySlug(shared.headerFooterPageSlug, {
+          params: {
+            depth: 0,
           },
-          // Only use CMS features if it has items array, otherwise use defaults
-          features: (cmsFeatures?.items && Array.isArray(cmsFeatures.items) && cmsFeatures.items.length > 0)
-            ? {
-                title: cmsFeatures.title || defaultData.features.title,
-                subtitle: cmsFeatures.subtitle || defaultData.features.subtitle,
-                items: cmsFeatures.items,
-              }
-            : defaultData.features,
-          // Only use CMS process if it has steps array, otherwise use defaults
-          process: (cmsProcess?.steps && Array.isArray(cmsProcess.steps) && cmsProcess.steps.length > 0)
-            ? {
-                title: cmsProcess.title || defaultData.process.title,
-                subtitle: cmsProcess.subtitle || defaultData.process.subtitle,
-                steps: cmsProcess.steps,
-              }
-            : defaultData.process,
-          // Merge contact data with defaults
-          contact: cmsContact
-            ? {
-                title: cmsContact.title || defaultData.contact.title,
-                subtitle: cmsContact.subtitle || defaultData.contact.subtitle,
-                form: {
-                  name: cmsContact.form?.name || defaultData.contact.form.name,
-                  email: cmsContact.form?.email || defaultData.contact.form.email,
-                  phone: cmsContact.form?.phone || defaultData.contact.form.phone,
-                  voicePrompt: cmsContact.form?.voicePrompt || defaultData.contact.form.voicePrompt,
-                  voiceListening: cmsContact.form?.voiceListening || defaultData.contact.form.voiceListening,
-                  voiceTranscript: cmsContact.form?.voiceTranscript || defaultData.contact.form.voiceTranscript,
-                  submit: cmsContact.form?.submit || defaultData.contact.form.submit,
-                },
-              }
-            : defaultData.contact,
-          footer: cmsFooter || defaultData.footer,
-        }
+        })
+
+        const headerFooterContent = (headerFooterPage as any)?.content || {}
+        headerData = mapHeaderContent(headerFooterContent.header)
+        footerData = mapFooterContent(headerFooterContent.footer)
+      }
+
+      const cmsHero = sections.hero || {}
+      heroData = {
+        headline: cmsHero.headline || homepage?.title || defaultHero.headline,
+        subheadline: cmsHero.subheadline || defaultHero.subheadline,
+        cta: cmsHero.cta || defaultHero.cta,
+        image: cmsHero.image
+          ? getAbsoluteMediaUrl(typeof cmsHero.image === 'string' ? cmsHero.image : cmsHero.image?.url)
+          : defaultHero.image,
+        stats: Array.isArray(cmsHero.stats) && cmsHero.stats.length > 0 ? cmsHero.stats : defaultHero.stats,
+      }
+
+      const cmsFeatures = sections.features || {}
+      featuresData =
+        Array.isArray(cmsFeatures.items) && cmsFeatures.items.length > 0
+          ? {
+              title: cmsFeatures.title || defaultFeatures.title,
+              subtitle: cmsFeatures.subtitle || defaultFeatures.subtitle,
+              items: cmsFeatures.items,
+            }
+          : defaultFeatures
+
+      const cmsProcess = sections.process || {}
+      processData =
+        Array.isArray(cmsProcess.steps) && cmsProcess.steps.length > 0
+          ? {
+              title: cmsProcess.title || defaultProcess.title,
+              subtitle: cmsProcess.subtitle || defaultProcess.subtitle,
+              steps: cmsProcess.steps,
+            }
+          : defaultProcess
+
+      const cmsContact = sections.contact || {}
+      contactData = {
+        title: cmsContact.title || defaultContact.title,
+        subtitle: cmsContact.subtitle || defaultContact.subtitle,
+        form: {
+          name: cmsContact.form?.name || defaultContact.form.name,
+          email: cmsContact.form?.email || defaultContact.form.email,
+          phone: cmsContact.form?.phone || defaultContact.form.phone,
+          voicePrompt: cmsContact.form?.voicePrompt || defaultContact.form.voicePrompt,
+          voiceListening: cmsContact.form?.voiceListening || defaultContact.form.voiceListening,
+          voiceTranscript: cmsContact.form?.voiceTranscript || defaultContact.form.voiceTranscript,
+          submit: cmsContact.form?.submit || defaultContact.form.submit,
+        },
       }
     }
   } catch (error) {
-    // Fallback to default data if CMS fetch fails
     console.error('[Home Page] Failed to fetch page data from CMS:', error)
   }
 
   return (
     <main>
-      <Hero data={pageData.hero} />
-      <Features data={pageData.features} />
-      <Process data={pageData.process} />
-      <ContactForm data={pageData.contact} />
-      <Footer data={pageData.footer} />
+      <Hero data={heroData} />
+      <Features data={featuresData} />
+      <Process data={processData} />
+      <ContactForm data={contactData} />
+      <Footer data={footerData} />
     </main>
   )
 }

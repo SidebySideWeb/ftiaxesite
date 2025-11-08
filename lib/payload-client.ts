@@ -150,50 +150,37 @@ export class PayloadApiClient {
    * Fetches a single page by slug
    */
   async getPage<T = any>(slug: string, options: FetchOptions = {}): Promise<PayloadResponse<T>> {
-    return this.request<PayloadResponse<T>>(
-      '/pages',
-      {
-        ...options,
-        params: {
-          ...options.params,
-          where: JSON.stringify({
-            slug: { equals: slug },
-            ...(this.tenantSlug && {
-              'tenant.slug': { equals: this.tenantSlug },
-            }),
-            ...(this.tenantDomain && {
-              'tenant.domain': { equals: this.tenantDomain },
-            }),
-          }),
-          limit: 1,
-          depth: 2, // Include relations
-        },
-      }
-    )
+    const where: Record<string, any> = {
+      slug: { equals: slug },
+    }
+
+    return this.request<PayloadResponse<T>>('/pages', {
+      ...options,
+      params: {
+        ...options.params,
+        where: JSON.stringify(where),
+        limit: 1,
+        depth: options.params?.depth ?? 2,
+      },
+    })
+  }
+
+  async getPageBySlug<T = any>(slug: string, options: FetchOptions = {}): Promise<T | null> {
+    const result = await this.getPage<T>(slug, options)
+    return result.docs?.[0] ?? null
   }
 
   /**
    * Fetches all pages for the tenant
    */
   async getPages<T = any>(options: FetchOptions = {}): Promise<PayloadResponse<T>> {
-    return this.request<PayloadResponse<T>>(
-      '/pages',
-      {
-        ...options,
-        params: {
-          ...options.params,
-          where: JSON.stringify({
-            ...(this.tenantSlug && {
-              'tenant.slug': { equals: this.tenantSlug },
-            }),
-            ...(this.tenantDomain && {
-              'tenant.domain': { equals: this.tenantDomain },
-            }),
-          }),
-          depth: 2,
-        },
-      }
-    )
+    return this.request<PayloadResponse<T>>('/pages', {
+      ...options,
+      params: {
+        ...options.params,
+        depth: options.params?.depth ?? 2,
+      },
+    })
   }
 
   /**

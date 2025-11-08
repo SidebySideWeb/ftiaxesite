@@ -1,6 +1,7 @@
 import Header from "@/components/Header"
 import GoogleTagManager from "@/components/GoogleTagManager"
 import { createClientWithTenant } from "@/lib/payload-client"
+import { defaultHeaderData, mapHeaderContent } from "@/lib/content-mappers"
 import type { Metadata } from "next"
 import { Roboto, Roboto_Condensed } from "next/font/google"
 import { headers } from "next/headers"
@@ -15,7 +16,7 @@ const roboto = Roboto({
 
 const robotoCondensed = Roboto_Condensed({
   subsets: ['latin', 'greek'],
-  weight: ['300', '400', '700'],
+  weight: ['300', '700'],
   variable: '--font-roboto-condensed',
   display: 'swap',
 })
@@ -30,45 +31,25 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Fetch header data from Payload CMS
   const headersList = await headers()
   const hostname = headersList.get('host') || ''
-  
-  let headerData = {
-    logo_text: "ftiaxesite.gr",
-    menu: [
-      { label: "Χαρακτηριστικά", link: "features" },
-      { label: "Διαδικασία", link: "process" },
-    ],
-    cta: {
-      label: "Φτιάξε το site σου",
-      link: "contact",
-    },
-  }
 
-  // Try to fetch header from CMS home page
+  let headerData = defaultHeaderData
+
   try {
     if (process.env.NEXT_PUBLIC_PAYLOAD_URL) {
       const client = createClientWithTenant(hostname)
-      const homePageResult = await client.getPage('home')
-      const homePage = homePageResult.docs?.[0]
-      
-      // Use new tenant-specific section field names: sections-ftiaxesite.*
-      const cmsHeader = homePage?.['sections-ftiaxesite']?.['header-ftiaxesite']
-      if (cmsHeader) {
-        headerData = cmsHeader
-      }
+      const headerFooterPage = await client.getPageBySlug('header-footer-ftiaxesite', {
+        params: {
+          depth: 0,
+        },
+      })
+
+      const cmsHeader = (headerFooterPage as any)?.content?.header
+      headerData = mapHeaderContent(cmsHeader)
     }
   } catch (error) {
-    // Fallback to default data if CMS is not available
     console.error('[Layout] Failed to fetch header data from CMS:', error)
-    if (error instanceof Error) {
-      console.error('[Layout] Error details:', {
-        message: error.message,
-        hostname,
-        payloadUrl: process.env.NEXT_PUBLIC_PAYLOAD_URL,
-      })
-    }
   }
 
   return (
