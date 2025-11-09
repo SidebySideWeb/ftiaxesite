@@ -30,6 +30,51 @@ export const defaultFooterData = {
   copyright: '© 2025 ftiaxesite.gr – Κατασκευή Ιστοσελίδων με AI',
 }
 
+const isLexicalState = (value: any): value is { root: { children?: any[] } } =>
+  typeof value === 'object' && value !== null && 'root' in value
+
+export function richTextToPlainText(value: any): string {
+  if (!value) return ''
+  if (typeof value === 'string') return value
+  if (!isLexicalState(value)) return ''
+
+  const parts: string[] = []
+
+  const visitNodes = (nodes: any[] = []) => {
+    nodes.forEach((node, index) => {
+      if (!node) return
+      const type = node.type
+
+      if (type === 'linebreak') {
+        parts.push('\n')
+        return
+      }
+
+      if (type === 'paragraph') {
+        const lengthBefore = parts.length
+        visitNodes(node.children ?? [])
+        if (index < nodes.length - 1 && parts.length > lengthBefore) {
+          parts.push('\n')
+        }
+        return
+      }
+
+      if (type === 'text') {
+        parts.push(node.text ?? '')
+        return
+      }
+
+      if (Array.isArray(node.children)) {
+        visitNodes(node.children)
+      }
+    })
+  }
+
+  visitNodes(value.root?.children ?? [])
+
+  return parts.join('').replace(/\n{3,}/g, '\n\n').trim()
+}
+
 export function mapHeaderContent(content: any) {
   if (!content) {
     return defaultHeaderData
@@ -69,4 +114,27 @@ export function mapFooterContent(content: any) {
     },
     copyright: content.copyright || defaultFooterData.copyright,
   }
+}
+
+const mapFeatureItems = (items: any[]) => {
+  if (!Array.isArray(items) || items.length === 0) {
+    return defaultFeatures.items
+  }
+
+  return items.map((item, index) => ({
+    ...item,
+    description:
+      richTextToPlainText(item?.description) || defaultFeatures.items[index]?.description || '',
+  }))
+}
+
+const mapProcessSteps = (steps: any[]) => {
+  if (!Array.isArray(steps) || steps.length === 0) {
+    return defaultProcess.steps
+  }
+
+  return steps.map((step, index) => ({
+    ...step,
+    description: richTextToPlainText(step?.description) || defaultProcess.steps[index]?.description || '',
+  }))
 }

@@ -1,6 +1,6 @@
 import { headers } from "next/headers"
 import { createClientWithTenant, getAbsoluteMediaUrl } from "@/lib/payload-client"
-import { defaultHeaderData, defaultFooterData, mapHeaderContent, mapFooterContent } from "@/lib/content-mappers"
+import { defaultHeaderData, defaultFooterData, mapHeaderContent, mapFooterContent, richTextToPlainText } from "@/lib/content-mappers"
 import Hero from "@/components/Hero"
 import Features from "@/components/Features"
 import Process from "@/components/Process"
@@ -114,12 +114,16 @@ export default async function Page() {
       const client = createClientWithTenant(hostname)
       const homepage = await client.getPageBySlug('ftiaxesite-homepage', {
         params: {
-          depth: 0,
+          depth: 1,
         },
       })
 
       const content = (homepage as any)?.content || {}
-      const sections = content.sections || {}
+      const resolvedSections = (homepage as any)?.sections
+      const sections =
+        resolvedSections && Object.keys(resolvedSections).length > 0
+          ? resolvedSections
+          : content.sections || {}
       const shared = content.shared || {}
 
       if (shared.headerFooterPageSlug) {
@@ -135,40 +139,69 @@ export default async function Page() {
       }
 
       const cmsHero = sections.hero || {}
+
+      let heroImageUrl = defaultHero.image
+      if (cmsHero.image) {
+        if (typeof cmsHero.image === 'object') {
+          heroImageUrl =
+            getAbsoluteMediaUrl(cmsHero.image.url || cmsHero.image.thumbnailURL || cmsHero.image.sizes?.card?.url) ||
+            heroImageUrl
+        } else if (typeof cmsHero.image === 'string') {
+          heroImageUrl = getAbsoluteMediaUrl(cmsHero.image) || heroImageUrl
+        } else if (typeof cmsHero.image === 'number') {
+          try {
+            const mediaDoc = await client.getMedia(cmsHero.image)
+            heroImageUrl =
+              getAbsoluteMediaUrl(mediaDoc?.url || mediaDoc?.thumbnailURL || mediaDoc?.sizes?.card?.url) ||
+              heroImageUrl
+          } catch (error) {
+            console.warn('[Ftiaxesite] Failed to resolve hero image media:', error)
+          }
+        }
+      }
+
       heroData = {
         headline: cmsHero.headline || homepage?.title || defaultHero.headline,
-        subheadline: cmsHero.subheadline || defaultHero.subheadline,
+        subheadline: richTextToPlainText(cmsHero.subheadline) || defaultHero.subheadline,
         cta: cmsHero.cta || defaultHero.cta,
-        image: cmsHero.image
-          ? getAbsoluteMediaUrl(typeof cmsHero.image === 'string' ? cmsHero.image : cmsHero.image?.url)
-          : defaultHero.image,
+        image: heroImageUrl,
         stats: Array.isArray(cmsHero.stats) && cmsHero.stats.length > 0 ? cmsHero.stats : defaultHero.stats,
       }
 
       const cmsFeatures = sections.features || {}
+      const cmsFeatureItems = Array.isArray(cmsFeatures.items) ? cmsFeatures.items : []
       featuresData =
-        Array.isArray(cmsFeatures.items) && cmsFeatures.items.length > 0
+        cmsFeatureItems.length > 0
           ? {
               title: cmsFeatures.title || defaultFeatures.title,
-              subtitle: cmsFeatures.subtitle || defaultFeatures.subtitle,
-              items: cmsFeatures.items,
+              subtitle: richTextToPlainText(cmsFeatures.subtitle) || defaultFeatures.subtitle,
+              items: cmsFeatureItems.map((item, index) => ({
+                ...item,
+                description:
+                  richTextToPlainText(item.description) || defaultFeatures.items[index]?.description || '',
+              })),
             }
           : defaultFeatures
 
       const cmsProcess = sections.process || {}
+      const cmsProcessSteps = Array.isArray(cmsProcess.steps) ? cmsProcess.steps : []
       processData =
-        Array.isArray(cmsProcess.steps) && cmsProcess.steps.length > 0
+        cmsProcessSteps.length > 0
           ? {
               title: cmsProcess.title || defaultProcess.title,
-              subtitle: cmsProcess.subtitle || defaultProcess.subtitle,
-              steps: cmsProcess.steps,
+              subtitle: richTextToPlainText(cmsProcess.subtitle) || defaultProcess.subtitle,
+              steps: cmsProcessSteps.map((step, index) => ({
+                ...step,
+                description:
+                  richTextToPlainText(step.description) || defaultProcess.steps[index]?.description || '',
+              })),
             }
           : defaultProcess
 
       const cmsContact = sections.contact || {}
       contactData = {
         title: cmsContact.title || defaultContact.title,
-        subtitle: cmsContact.subtitle || defaultContact.subtitle,
+        subtitle: richTextToPlainText(cmsContact.subtitle) || defaultContact.subtitle,
         form: {
           name: cmsContact.form?.name || defaultContact.form.name,
           email: cmsContact.form?.email || defaultContact.form.email,
