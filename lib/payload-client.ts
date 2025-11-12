@@ -106,6 +106,8 @@ export class PayloadApiClient {
       const response = await fetch(url, {
         ...fetchOptions,
         headers,
+        cache: 'no-store',
+        next: { revalidate: 0 },
       })
 
       if (!response.ok) {
@@ -152,6 +154,12 @@ export class PayloadApiClient {
   async getPage<T = any>(slug: string, options: FetchOptions = {}): Promise<PayloadResponse<T>> {
     const where: Record<string, any> = {
       slug: { equals: slug },
+    }
+
+    if (this.tenantSlug) {
+      where['tenant.slug'] = { equals: this.tenantSlug }
+    } else if (this.tenantDomain) {
+      where['tenant.domain'] = { equals: this.tenantDomain }
     }
 
     return this.request<PayloadResponse<T>>('/pages', {
