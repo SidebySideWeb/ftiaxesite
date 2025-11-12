@@ -111,7 +111,7 @@ export default async function Page() {
 
   try {
     if (process.env.NEXT_PUBLIC_PAYLOAD_URL) {
-      const client = createClientWithTenant(hostname)
+      const client = createClientWithTenant()
       const homepage = await client.getPageBySlug('ftiaxesite-homepage', {
         params: {
           depth: 1,

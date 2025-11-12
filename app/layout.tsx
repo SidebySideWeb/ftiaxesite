@@ -38,7 +38,7 @@ export default async function RootLayout({
 
   try {
     if (process.env.NEXT_PUBLIC_PAYLOAD_URL) {
-      const client = createClientWithTenant(hostname)
+      const client = createClientWithTenant()
       const headerFooterPage = await client.getPageBySlug('header-footer-ftiaxesite', {
         params: {
           depth: 0,

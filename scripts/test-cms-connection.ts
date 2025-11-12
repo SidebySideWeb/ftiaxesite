@@ -35,7 +35,7 @@ async function testCMSConnection() {
     console.log('─'.repeat(50))
 
     try {
-      const client = createClientWithTenant(hostname)
+      const client = createClientWithTenant()
       
       // Try to fetch the home page
       console.log('  📄 Fetching home page...')
@@ -82,7 +82,7 @@ async function testCMSConnection() {
   console.log('─'.repeat(50))
   
   try {
-    const client = createClientWithTenant('ftiaxesite.gr')
+    const client = createClientWithTenant()
     const tenantResult = await client.getTenant() as PayloadResponse
     
     console.log('  📊 Tenant Results:')

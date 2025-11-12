@@ -299,25 +299,6 @@ export function getAbsoluteMediaUrl(url: string | undefined | null): string {
   return url
 }
 
-/**
- * Helper function to detect tenant from hostname (for domain-based routing)
- * Strips port numbers and handles localhost specially
- */
-export function getTenantFromHostname(hostname: string): string | null {
-  if (!hostname) return null
-  
-  // Remove port number if present (e.g., "localhost:3001" -> "localhost")
-  const domain = hostname.split(':')[0]
-  
-  // For localhost, use tenant slug from env or return null
-  if (domain === 'localhost' || domain === '127.0.0.1') {
-    return process.env.NEXT_PUBLIC_TENANT_SLUG || null
-  }
-  
-  // For production, return the domain as-is (e.g., "ftiaxesite.gr")
-  return domain
-}
-
 function resolveBaseUrl(): string {
   const envBase =
     (process.env.PAYLOAD_URL || process.env.NEXT_PUBLIC_PAYLOAD_URL || '').replace(/\/$/, '')
@@ -379,7 +360,7 @@ function inferTenantSlugFromDomain(domain?: string | null): string | undefined {
  * Helper function to create a client with automatic tenant detection
  * Use this in Next.js server components or API routes
  */
-export function createClientWithTenant(_hostname?: string, locale?: string): PayloadApiClient {
+export function createClientWithTenant(locale?: string): PayloadApiClient {
   const baseUrl = resolveBaseUrl()
 
   if (!baseUrl) {
