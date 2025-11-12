@@ -318,41 +318,17 @@ export function getTenantFromHostname(hostname: string): string | null {
   return domain
 }
 
-const DEFAULT_CMS_BASE_URL = 'https://cms.ftiaxesite.gr'
-
-const domainBaseUrlMap: Record<string, string> = {
-  'ftiaxesite.gr': DEFAULT_CMS_BASE_URL,
-  'www.ftiaxesite.gr': DEFAULT_CMS_BASE_URL,
-  'ftiaxesite.vercel.app': DEFAULT_CMS_BASE_URL,
-  'ftiaxesite.sidebysites.dev': DEFAULT_CMS_BASE_URL,
-  'kallitechnia.gr': DEFAULT_CMS_BASE_URL,
-  'www.kallitechnia.gr': DEFAULT_CMS_BASE_URL,
-  'kallitechnia.vercel.app': DEFAULT_CMS_BASE_URL,
-  'kalitechnia.gr': DEFAULT_CMS_BASE_URL,
-  'www.kalitechnia.gr': DEFAULT_CMS_BASE_URL,
-  'kalitechnia.vercel.app': DEFAULT_CMS_BASE_URL,
-  'kaliitechnia.gr': DEFAULT_CMS_BASE_URL,
-  'www.kaliitechnia.gr': DEFAULT_CMS_BASE_URL,
-  'kaliitechnia.vercel.app': DEFAULT_CMS_BASE_URL,
-}
-
-function resolveBaseUrl(hostname?: string): string {
+function resolveBaseUrl(): string {
   const envBase =
     (process.env.PAYLOAD_URL || process.env.NEXT_PUBLIC_PAYLOAD_URL || '').replace(/\/$/, '')
   if (envBase) {
     return envBase
   }
 
-  const normalizedHost = hostname?.split(':')[0].toLowerCase()
-  if (normalizedHost) {
-    const mapped = domainBaseUrlMap[normalizedHost]
-    if (mapped) {
-      return mapped
-    }
-  }
-
   if (process.env.NODE_ENV === 'production') {
-    return DEFAULT_CMS_BASE_URL
+    console.warn(
+      '[Payload Client] NEXT_PUBLIC_PAYLOAD_URL is not set. CMS requests will fail in production.',
+    )
   }
 
   return ''
@@ -403,44 +379,29 @@ function inferTenantSlugFromDomain(domain?: string | null): string | undefined {
  * Helper function to create a client with automatic tenant detection
  * Use this in Next.js server components or API routes
  */
-export function createClientWithTenant(hostname?: string, locale?: string): PayloadApiClient {
-  const baseUrl = resolveBaseUrl(hostname)
+export function createClientWithTenant(_hostname?: string, locale?: string): PayloadApiClient {
+  const baseUrl = resolveBaseUrl()
 
   if (!baseUrl) {
     console.warn('[Payload Client] NEXT_PUBLIC_PAYLOAD_URL is not set. CMS requests will fail.')
   }
 
-  const detectedDomain = hostname ? getTenantFromHostname(hostname) : undefined
   const envTenantSlug = process.env.NEXT_PUBLIC_TENANT_SLUG || undefined
  
-   // Prefer explicit tenant slug when available
-   let tenantSlug: string | undefined = envTenantSlug
-   let tenantDomain: string | undefined
- 
-   if (!tenantSlug) {
-     const normalizedDomain = detectedDomain ?? undefined
-     const inferredSlug = inferTenantSlugFromDomain(normalizedDomain)
-     if (inferredSlug) {
-       tenantSlug = inferredSlug
-       tenantDomain = normalizedDomain
-     } else if (normalizedDomain && normalizedDomain !== 'localhost' && normalizedDomain !== '127.0.0.1') {
-       tenantDomain = normalizedDomain
-     }
-   }
+  if (!envTenantSlug) {
+    console.warn('[Payload Client] NEXT_PUBLIC_TENANT_SLUG is not set. Tenant-scoped requests may fail.')
+  }
 
   const client = createPayloadClient({
     baseUrl,
-    tenantSlug,
-    tenantDomain,
+    tenantSlug: envTenantSlug,
     locale,
   })
 
   if (process.env.NODE_ENV === 'development') {
     console.log('[Payload Client]', {
       baseUrl,
-      tenantSlug,
-      tenantDomain,
-      hostname,
+      tenantSlug: envTenantSlug,
     })
   }
 
