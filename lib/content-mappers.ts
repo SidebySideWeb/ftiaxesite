@@ -30,6 +30,71 @@ export const defaultFooterData = {
   copyright: '© 2025 ftiaxesite.gr – Κατασκευή Ιστοσελίδων με AI',
 }
 
+export const defaultFeaturesData = {
+  title: 'Γιατί να μας επιλέξεις',
+  subtitle: 'Όλα όσα χρειάζεσαι για να έχεις έτοιμο το website σου σε 48 ώρες',
+  items: [
+    {
+      icon: 'clock',
+      title: 'Παράδοση σε 48 ώρες',
+      description: 'Το website σου είναι έτοιμο μέσα σε δύο μέρες.',
+    },
+    {
+      icon: 'euro',
+      title: 'Από 250€',
+      description: 'Χαμηλό κόστος χωρίς κρυφές χρεώσεις.',
+    },
+    {
+      icon: 'trendingUp',
+      title: 'SEO & Analytics',
+      description: 'Έτοιμο για Google με ενσωματωμένο Tag Manager.',
+    },
+    {
+      icon: 'shield',
+      title: 'Cookie Consent',
+      description: 'Συμμόρφωση με GDPR και απόλυτη διαφάνεια.',
+    },
+    {
+      icon: 'smartphone',
+      title: 'Responsive Design',
+      description: 'Λειτουργεί άψογα σε κινητά, tablet και υπολογιστές.',
+    },
+    {
+      icon: 'zap',
+      title: 'AI Technology',
+      description: 'Χρησιμοποιούμε Τεχνητή Νοημοσύνη για γρήγορη ανάπτυξη.',
+    },
+  ],
+} as const
+
+export const defaultProcessData = {
+  title: 'Πώς δουλεύουμε',
+  subtitle: 'Από την ιδέα στην online παρουσία — απλά, γρήγορα και αποτελεσματικά.',
+  steps: [
+    {
+      number: '01',
+      icon: 'fileText',
+      title: 'Συμπληρώνεις τη φόρμα',
+      description: 'Μας λες τι χρειάζεσαι.',
+      color: 'teal' as const,
+    },
+    {
+      number: '02',
+      icon: 'wand2',
+      title: 'Δημιουργούμε το σχέδιο',
+      description: 'Χρησιμοποιούμε AI για να σχεδιάσουμε το website σου.',
+      color: 'navy' as const,
+    },
+    {
+      number: '03',
+      icon: 'checkCircle2',
+      title: 'Παραδίδουμε σε 48 ώρες',
+      description: 'Παραλαμβάνεις έτοιμο site με SEO & Analytics.',
+      color: 'teal' as const,
+    },
+  ],
+} as const
+
 const isLexicalState = (value: any): value is { root: { children?: any[] } } =>
   typeof value === 'object' && value !== null && 'root' in value
 
@@ -118,23 +183,23 @@ export function mapFooterContent(content: any) {
 
 const mapFeatureItems = (items: any[]) => {
   if (!Array.isArray(items) || items.length === 0) {
-    return defaultFeatures.items
+    return defaultFeaturesData.items
   }
 
   return items.map((item, index) => ({
     ...item,
     description:
-      richTextToPlainText(item?.description) || defaultFeatures.items[index]?.description || '',
+      richTextToPlainText(item?.description) || defaultFeaturesData.items[index]?.description || '',
   }))
 }
 
 const mapProcessSteps = (steps: any[]) => {
   if (!Array.isArray(steps) || steps.length === 0) {
-    return defaultProcess.steps
+    return defaultProcessData.steps
   }
 
   return steps.map((step, index) => ({
     ...step,
-    description: richTextToPlainText(step?.description) || defaultProcess.steps[index]?.description || '',
+    description: richTextToPlainText(step?.description) || defaultProcessData.steps[index]?.description || '',
   }))
 }

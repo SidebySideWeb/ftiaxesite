@@ -151,50 +151,118 @@ export default async function Page() {
         } else if (typeof cmsHero.image === 'number') {
           try {
             const mediaDoc = await client.getMedia(cmsHero.image)
-            heroImageUrl =
-              getAbsoluteMediaUrl(mediaDoc?.url || mediaDoc?.thumbnailURL || mediaDoc?.sizes?.card?.url) ||
-              heroImageUrl
+            if (mediaDoc && typeof mediaDoc === 'object') {
+              const mediaRecord = mediaDoc as Record<string, unknown>
+              const directUrl = typeof mediaRecord.url === 'string' ? mediaRecord.url : undefined
+              const thumbnailUrl =
+                typeof mediaRecord.thumbnailURL === 'string' ? (mediaRecord.thumbnailURL as string) : undefined
+              let cardUrl: string | undefined
+              if (mediaRecord.sizes && typeof mediaRecord.sizes === 'object') {
+                const sizesRecord = mediaRecord.sizes as Record<string, unknown>
+                const card = sizesRecord.card
+                if (card && typeof card === 'object') {
+                  const cardRecord = card as Record<string, unknown>
+                  if (typeof cardRecord.url === 'string') {
+                    cardUrl = cardRecord.url
+                  }
+                }
+              }
+
+              heroImageUrl =
+                getAbsoluteMediaUrl(directUrl || thumbnailUrl || cardUrl) || heroImageUrl
+            }
           } catch (error) {
             console.warn('[Ftiaxesite] Failed to resolve hero image media:', error)
           }
         }
       }
 
+      const heroHeadline =
+        typeof cmsHero.headline === 'string' && cmsHero.headline.trim().length > 0
+          ? cmsHero.headline
+          : defaultHero.headline
+
+      const heroSubheadlineRaw = richTextToPlainText(cmsHero.subheadline)
+      const heroSubheadline = heroSubheadlineRaw?.trim().length ? heroSubheadlineRaw : defaultHero.subheadline
+
+      const heroCta = typeof cmsHero.cta === 'string' && cmsHero.cta.trim().length > 0 ? cmsHero.cta : defaultHero.cta
+
       heroData = {
-        headline: cmsHero.headline || homepage?.title || defaultHero.headline,
-        subheadline: richTextToPlainText(cmsHero.subheadline) || defaultHero.subheadline,
-        cta: cmsHero.cta || defaultHero.cta,
+        headline: heroHeadline,
+        subheadline: heroSubheadline,
+        cta: heroCta,
         image: heroImageUrl,
         stats: Array.isArray(cmsHero.stats) && cmsHero.stats.length > 0 ? cmsHero.stats : defaultHero.stats,
       }
 
       const cmsFeatures = sections.features || {}
-      const cmsFeatureItems = Array.isArray(cmsFeatures.items) ? cmsFeatures.items : []
+      const cmsFeatureItems = Array.isArray(cmsFeatures.items)
+        ? (cmsFeatures.items as Array<Record<string, unknown>>)
+        : []
       featuresData =
         cmsFeatureItems.length > 0
           ? {
               title: cmsFeatures.title || defaultFeatures.title,
               subtitle: richTextToPlainText(cmsFeatures.subtitle) || defaultFeatures.subtitle,
-              items: cmsFeatureItems.map((item, index) => ({
-                ...item,
-                description:
-                  richTextToPlainText(item.description) || defaultFeatures.items[index]?.description || '',
-              })),
+              items: cmsFeatureItems.map((item, index) => {
+                const itemRecord = item as Record<string, unknown>
+                const defaultItem = defaultFeatures.items[index] ?? defaultFeatures.items[0]
+                const icon =
+                  typeof itemRecord.icon === 'string'
+                    ? itemRecord.icon
+                    : defaultItem?.icon ?? defaultFeatures.items[0].icon
+                const title =
+                  typeof itemRecord.title === 'string'
+                    ? itemRecord.title
+                    : defaultItem?.title ?? defaultFeatures.items[0].title
+                const description = richTextToPlainText(itemRecord.description)
+                return {
+                  icon,
+                  title,
+                  description: description || defaultItem?.description || defaultFeatures.items[0].description,
+                }
+              }),
             }
           : defaultFeatures
 
       const cmsProcess = sections.process || {}
-      const cmsProcessSteps = Array.isArray(cmsProcess.steps) ? cmsProcess.steps : []
+      const cmsProcessSteps = Array.isArray(cmsProcess.steps)
+        ? (cmsProcess.steps as Array<Record<string, unknown>>)
+        : []
       processData =
         cmsProcessSteps.length > 0
           ? {
               title: cmsProcess.title || defaultProcess.title,
               subtitle: richTextToPlainText(cmsProcess.subtitle) || defaultProcess.subtitle,
-              steps: cmsProcessSteps.map((step, index) => ({
-                ...step,
-                description:
-                  richTextToPlainText(step.description) || defaultProcess.steps[index]?.description || '',
-              })),
+              steps: cmsProcessSteps.map((step, index) => {
+                const stepRecord = step as Record<string, unknown>
+                const defaultStep = defaultProcess.steps[index] ?? defaultProcess.steps[0]
+                const number =
+                  typeof stepRecord.number === 'string'
+                    ? stepRecord.number
+                    : defaultStep?.number ?? defaultProcess.steps[0].number
+                const icon =
+                  typeof stepRecord.icon === 'string'
+                    ? stepRecord.icon
+                    : defaultStep?.icon ?? defaultProcess.steps[0].icon
+                const title =
+                  typeof stepRecord.title === 'string'
+                    ? stepRecord.title
+                    : defaultStep?.title ?? defaultProcess.steps[0].title
+                const allowedStepColors = new Set(['teal', 'navy'] as const)
+                const color =
+                  typeof stepRecord.color === 'string' && allowedStepColors.has(stepRecord.color as 'teal' | 'navy')
+                    ? (stepRecord.color as 'teal' | 'navy')
+                    : defaultStep?.color ?? defaultProcess.steps[0].color
+                const description = richTextToPlainText(stepRecord.description)
+                return {
+                  number,
+                  icon,
+                  title,
+                  color,
+                  description: description || defaultStep?.description || defaultProcess.steps[0].description,
+                }
+              }),
             }
           : defaultProcess
 
