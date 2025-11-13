@@ -182,19 +182,37 @@ export class PayloadApiClient {
     // Get tenant slug - use fallback if not set
     const tenantSlug = this.tenantSlug || process.env.NEXT_PUBLIC_TENANT_SLUG || 'ftiaxesite'
 
-    // Only filter by slug - access control filters by tenant ID based on X-Tenant-Slug header
-    // Payload doesn't support tenant.slug in where clauses, so we rely on the header + access control
+    // Fetch tenant to get tenant ID, then include it explicitly in where clause
+    // This ensures tenant filtering works even if access control doesn't merge where clauses
+    let tenantId: number | string | undefined
+    try {
+      const tenantResponse = await this.getTenant({ params: { limit: 1, depth: 0 } })
+      const tenant = Array.isArray(tenantResponse) ? tenantResponse[0] : (tenantResponse as any)?.docs?.[0]
+      if (tenant?.id) {
+        tenantId = tenant.id
+      }
+    } catch (error) {
+      console.error('[Payload Client] Failed to fetch tenant:', error)
+      // Continue without tenant ID - access control should still filter
+    }
+
+    // Include tenant ID explicitly in where clause if we have it
     const where: Record<string, any> = {
       slug: { equals: slug },
+    }
+    
+    if (tenantId !== undefined) {
+      where.tenant = { equals: tenantId }
     }
 
     // Always log in production to debug tenant scoping
     console.error('[Payload Client] getPage query:', {
       slug,
       tenantSlug,
+      tenantId,
       where,
       whereString: JSON.stringify(where),
-      note: 'Tenant filtering handled by X-Tenant-Slug header + access control',
+      note: tenantId ? 'Tenant filtering via explicit tenant ID in where clause' : 'Tenant filtering via X-Tenant-Slug header + access control',
     })
 
     const params = {
