@@ -102,6 +102,16 @@ export class PayloadApiClient {
       })
     }
 
+    // Log every API request in production to debug
+    console.error('[Payload API Request]', {
+      url,
+      method: fetchOptions.method || 'GET',
+      tenantSlug: this.tenantSlug,
+      tenantDomain: this.tenantDomain,
+      headers: Object.fromEntries(headers.entries()),
+      params,
+    })
+
     try {
       const response = await fetch(url, {
         ...fetchOptions,
@@ -133,7 +143,24 @@ export class PayloadApiClient {
         throw new Error(errorMessage)
       }
 
-      return response.json()
+      const json = await response.json()
+
+      // Log API response in production to debug
+      console.error('[Payload API Response]', {
+        url,
+        status: response.status,
+        tenantSlug: this.tenantSlug,
+        hasDocs: Array.isArray(json.docs),
+        docCount: Array.isArray(json.docs) ? json.docs.length : 0,
+        firstDocSlug: Array.isArray(json.docs) && json.docs.length > 0
+          ? json.docs[0]?.slug
+          : null,
+        firstDocTenant: Array.isArray(json.docs) && json.docs.length > 0
+          ? json.docs[0]?.tenant
+          : null,
+      })
+
+      return json
     } catch (error) {
       // Network errors or other fetch failures
       if (error instanceof Error) {
