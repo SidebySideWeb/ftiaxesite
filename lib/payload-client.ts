@@ -179,32 +179,48 @@ export class PayloadApiClient {
    * Fetches a single page by slug
    */
   async getPage<T = any>(slug: string, options: FetchOptions = {}): Promise<PayloadResponse<T>> {
+    // Get tenant slug - use fallback if not set
+    const tenantSlug = this.tenantSlug || process.env.NEXT_PUBLIC_TENANT_SLUG || 'ftiaxesite'
+    const tenantDomain = this.tenantDomain
+
     const where: Record<string, any> = {
       slug: { equals: slug },
     }
 
-    if (this.tenantSlug) {
-      where['tenant.slug'] = { equals: this.tenantSlug }
-    } else if (this.tenantDomain) {
-      where['tenant.domain'] = { equals: this.tenantDomain }
+    // ALWAYS add tenant filter - this is critical for multi-tenant isolation
+    if (tenantSlug) {
+      where['tenant.slug'] = { equals: tenantSlug }
+    } else if (tenantDomain) {
+      where['tenant.domain'] = { equals: tenantDomain }
+    } else {
+      // If neither is set, throw an error to prevent cross-tenant data leakage
+      throw new Error(
+        '[Payload Client] Tenant slug or domain must be set. Set NEXT_PUBLIC_TENANT_SLUG environment variable.',
+      )
     }
 
     // Always log in production to debug tenant scoping
-    console.warn('[Payload Client] getPage query:', {
+    console.error('[Payload Client] getPage query:', {
       slug,
-      tenantSlug: this.tenantSlug,
-      tenantDomain: this.tenantDomain,
+      tenantSlug,
+      tenantDomain,
       where,
+      whereString: JSON.stringify(where),
     })
+
+    const params = {
+      ...options.params,
+      where: JSON.stringify(where),
+      limit: 1,
+      depth: options.params?.depth ?? 2,
+    }
+
+    // Log the exact params being sent
+    console.error('[Payload Client] getPage params:', params)
 
     return this.request<PayloadResponse<T>>('/pages', {
       ...options,
-      params: {
-        ...options.params,
-        where: JSON.stringify(where),
-        limit: 1,
-        depth: options.params?.depth ?? 2,
-      },
+      params,
     })
   }
 
