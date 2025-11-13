@@ -181,31 +181,20 @@ export class PayloadApiClient {
   async getPage<T = any>(slug: string, options: FetchOptions = {}): Promise<PayloadResponse<T>> {
     // Get tenant slug - use fallback if not set
     const tenantSlug = this.tenantSlug || process.env.NEXT_PUBLIC_TENANT_SLUG || 'ftiaxesite'
-    const tenantDomain = this.tenantDomain
 
+    // Only filter by slug - access control filters by tenant ID based on X-Tenant-Slug header
+    // Payload doesn't support tenant.slug in where clauses, so we rely on the header + access control
     const where: Record<string, any> = {
       slug: { equals: slug },
-    }
-
-    // ALWAYS add tenant filter - this is critical for multi-tenant isolation
-    if (tenantSlug) {
-      where['tenant.slug'] = { equals: tenantSlug }
-    } else if (tenantDomain) {
-      where['tenant.domain'] = { equals: tenantDomain }
-    } else {
-      // If neither is set, throw an error to prevent cross-tenant data leakage
-      throw new Error(
-        '[Payload Client] Tenant slug or domain must be set. Set NEXT_PUBLIC_TENANT_SLUG environment variable.',
-      )
     }
 
     // Always log in production to debug tenant scoping
     console.error('[Payload Client] getPage query:', {
       slug,
       tenantSlug,
-      tenantDomain,
       where,
       whereString: JSON.stringify(where),
+      note: 'Tenant filtering handled by X-Tenant-Slug header + access control',
     })
 
     const params = {
@@ -265,14 +254,7 @@ export class PayloadApiClient {
         ...options,
         params: {
           ...options.params,
-          where: JSON.stringify({
-            ...(this.tenantSlug && {
-              'tenant.slug': { equals: this.tenantSlug },
-            }),
-            ...(this.tenantDomain && {
-              'tenant.domain': { equals: this.tenantDomain },
-            }),
-          }),
+          where: JSON.stringify({}), // Empty where - tenant filtering handled by access control
           depth: 1,
         },
       }
