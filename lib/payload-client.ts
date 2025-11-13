@@ -162,6 +162,14 @@ export class PayloadApiClient {
       where['tenant.domain'] = { equals: this.tenantDomain }
     }
 
+    // Always log in production to debug tenant scoping
+    console.warn('[Payload Client] getPage query:', {
+      slug,
+      tenantSlug: this.tenantSlug,
+      tenantDomain: this.tenantDomain,
+      where,
+    })
+
     return this.request<PayloadResponse<T>>('/pages', {
       ...options,
       params: {
@@ -375,24 +383,27 @@ export function createClientWithTenant(locale?: string): PayloadApiClient {
     console.warn('[Payload Client] NEXT_PUBLIC_PAYLOAD_URL is not set. CMS requests will fail.')
   }
 
-  const envTenantSlug = process.env.NEXT_PUBLIC_TENANT_SLUG || undefined
- 
-  if (!envTenantSlug) {
-    console.warn('[Payload Client] NEXT_PUBLIC_TENANT_SLUG is not set. Tenant-scoped requests may fail.')
+  const configuredTenantSlug = process.env.NEXT_PUBLIC_TENANT_SLUG
+  if (!configuredTenantSlug) {
+    console.warn(
+      '[Payload Client] NEXT_PUBLIC_TENANT_SLUG is not set. Falling back to "ftiaxesite" which may not match production data.',
+    )
   }
+  const envTenantSlug = configuredTenantSlug || 'ftiaxesite'
+
+  // Always log in production to debug configuration
+  console.warn('[Payload Client] createClientWithTenant:', {
+    baseUrl,
+    tenantSlug: envTenantSlug,
+    envTenantSlug: configuredTenantSlug,
+    locale,
+  })
 
   const client = createPayloadClient({
     baseUrl,
     tenantSlug: envTenantSlug,
     locale,
   })
-
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[Payload Client]', {
-      baseUrl,
-      tenantSlug: envTenantSlug,
-    })
-  }
 
   return client
 }
