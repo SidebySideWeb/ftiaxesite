@@ -1,6 +1,6 @@
 import Header from "@/components/Header"
 import GoogleTagManager from "@/components/GoogleTagManager"
-import { createClientWithTenant } from "@/lib/payload-client"
+import { getApiClient } from "@/lib/api-client"
 import { defaultHeaderData, mapHeaderContent } from "@/lib/content-mappers"
 import type { Metadata } from "next"
 import { Roboto, Roboto_Condensed } from "next/font/google"
@@ -38,12 +38,8 @@ export default async function RootLayout({
 
   try {
     if (process.env.NEXT_PUBLIC_PAYLOAD_URL) {
-      const client = createClientWithTenant()
-      const headerFooterPage = await client.getPageBySlug('header-footer-ftiaxesite', {
-        params: {
-          depth: 0,
-        },
-      })
+      const client = getApiClient()
+      const headerFooterPage = await client.getPage('header-footer-ftiaxesite', 0)
 
       const cmsHeader = (headerFooterPage as any)?.content?.header
       headerData = mapHeaderContent(cmsHeader)

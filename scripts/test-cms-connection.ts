@@ -4,7 +4,7 @@
  */
 
 import 'dotenv/config'
-import { createClientWithTenant, type PayloadResponse } from '../lib/payload-client'
+import { getApiClient } from '../lib/api-client'
 
 async function testCMSConnection() {
   console.log('🔍 Testing CMS Connection...\n')
@@ -35,39 +35,36 @@ async function testCMSConnection() {
     console.log('─'.repeat(50))
 
     try {
-      const client = createClientWithTenant()
+      const client = getApiClient()
       
       // Try to fetch the home page
       console.log('  📄 Fetching home page...')
-      const result = await client.getPage('home')
+      const page = await client.getPage('ftiaxesite-homepage')
       
-      console.log('  ✅ Success!')
-      console.log('  📊 Results:')
-      console.log(`    - Total docs: ${result.docs?.length || 0}`)
-      
-      if (result.docs && result.docs.length > 0) {
-        const page = result.docs[0]
-        console.log(`    - Page slug: ${page.slug}`)
-        console.log(`    - Page title: ${page.title}`)
-        console.log(`    - Page type: ${page.pageType}`)
-        console.log(`    - Has sections: ${!!page.sections}`)
-        console.log(`    - Has hero: ${!!page.sections?.hero}`)
-        console.log(`    - Has features: ${!!page.sections?.features}`)
-        console.log(`    - Has process: ${!!page.sections?.process}`)
-        console.log(`    - Has contact: ${!!page.sections?.contact}`)
-        console.log(`    - Has footer: ${!!page.sections?.footer}`)
+      if (page) {
+        console.log('  ✅ Success!')
+        console.log('  📊 Results:')
+        console.log(`    - Page slug: ${(page as any).slug}`)
+        console.log(`    - Page title: ${(page as any).title}`)
+        console.log(`    - Page type: ${(page as any).pageType}`)
+        const sections = (page as any).sections || (page as any).content?.sections
+        console.log(`    - Has sections: ${!!sections}`)
+        console.log(`    - Has hero: ${!!sections?.hero}`)
+        console.log(`    - Has features: ${!!sections?.features}`)
+        console.log(`    - Has process: ${!!sections?.process}`)
+        console.log(`    - Has contact: ${!!sections?.contact}`)
         
         // Check richText fields
-        if (page.sections?.hero?.subheadline) {
-          const subheadline = page.sections.hero.subheadline
+        if (sections?.hero?.subheadline) {
+          const subheadline = sections.hero.subheadline
           console.log(`    - Hero subheadline type: ${typeof subheadline}`)
           if (typeof subheadline === 'object') {
             console.log(`    - Hero subheadline is Lexical JSON: ${!!subheadline.root}`)
           }
         }
       } else {
-        console.log('  ⚠️  No pages found!')
-        console.log('  💡 Make sure the ftiaxesite tenant has a home page in the CMS')
+        console.log('  ⚠️  No page found!')
+        console.log('  💡 Make sure the ftiaxesite tenant has a ftiaxesite-homepage in the CMS')
       }
     } catch (error) {
       console.error('  ❌ Error:', error instanceof Error ? error.message : String(error))
@@ -82,18 +79,14 @@ async function testCMSConnection() {
   console.log('─'.repeat(50))
   
   try {
-    const client = createClientWithTenant()
-    const tenantResult = await client.getTenant() as PayloadResponse
+    const client = getApiClient()
+    const tenant = await client.getTenant()
     
     console.log('  📊 Tenant Results:')
-    console.log(`    - Total docs: ${tenantResult.docs?.length || 0}`)
     
-    if (tenantResult.docs && tenantResult.docs.length > 0) {
-      const tenant = tenantResult.docs[0]
+    if (tenant) {
       console.log(`    - Tenant slug: ${tenant.slug}`)
-      console.log(`    - Tenant name: ${tenant.name}`)
-      console.log(`    - Tenant domain: ${tenant.domain || 'NOT SET'}`)
-      console.log(`    - Template: ${tenant.template || 'NOT SET'}`)
+      console.log(`    - Tenant ID: ${tenant.id}`)
     } else {
       console.log('  ⚠️  No tenant found!')
       console.log('  💡 Make sure the ftiaxesite tenant exists in the CMS')

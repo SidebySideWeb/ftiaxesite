@@ -1,5 +1,5 @@
 import { headers } from "next/headers"
-import { createClientWithTenant, getAbsoluteMediaUrl } from "@/lib/payload-client"
+import { getApiClient, getAbsoluteMediaUrl } from "@/lib/api-client"
 import { defaultHeaderData, defaultFooterData, mapHeaderContent, mapFooterContent, richTextToPlainText } from "@/lib/content-mappers"
 import Hero from "@/components/Hero"
 import Features from "@/components/Features"
@@ -111,12 +111,8 @@ export default async function Page() {
 
   try {
     if (process.env.NEXT_PUBLIC_PAYLOAD_URL) {
-      const client = createClientWithTenant()
-      const homepage = await client.getPageBySlug('ftiaxesite-homepage', {
-        params: {
-          depth: 1,
-        },
-      })
+      const client = getApiClient()
+      const homepage = await client.getPage('ftiaxesite-homepage', 1)
 
       const content = (homepage as any)?.content || {}
       const resolvedSections = (homepage as any)?.sections
@@ -127,11 +123,7 @@ export default async function Page() {
       const shared = content.shared || {}
 
       if (shared.headerFooterPageSlug) {
-        const headerFooterPage = await client.getPageBySlug(shared.headerFooterPageSlug, {
-          params: {
-            depth: 0,
-          },
-        })
+        const headerFooterPage = await client.getPage(shared.headerFooterPageSlug, 0)
 
         const headerFooterContent = (headerFooterPage as any)?.content || {}
         headerData = mapHeaderContent(headerFooterContent.header)
