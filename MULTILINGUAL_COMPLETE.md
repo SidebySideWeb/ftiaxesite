@@ -64,7 +64,7 @@ Greek 🇬🇷 and English 🇬🇧 multilingual support is now fully enabled ac
 **Frontend**:
 - `components/LanguageSwitcher.tsx` - New component
 - `components/Header.tsx` - Added language switcher
-- `lib/payload-client.ts` - Added locale support to API calls
+- `lib/api-client.ts` - Added locale support to API calls (uses standard fetch)
 
 ### How It Works
 

@@ -102,21 +102,17 @@ export function LanguageSwitcher() {
 }
 ```
 
-### 4. Update Payload API Calls
+### 4. Update API Client Calls
 
-In `lib/payload-client.ts`, update to include locale:
+In `lib/api-client.ts`, locale support is already included in the API client:
 
 ```typescript
-export function createClientWithTenant(hostname: string, locale: string = 'el') {
-  const tenantDomain = extractTenantDomain(hostname)
-  
-  // When fetching pages, include locale
-  return {
-    getPage: async (slug: string) => {
-      const url = `${payloadUrl}/api/pages?where[slug][equals]=${slug}&locale=${locale}`
-      // ... fetch and return
-    },
-    // ... other methods
+// The API client automatically includes locale in requests
+const client = getApiClient()
+const page = await client.getPage(slug, depth)
+
+// Locale is automatically added to query params:
+// /api/pages?where=...&locale=el
   }
 }
 ```
